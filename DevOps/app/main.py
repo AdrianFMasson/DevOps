@@ -1,12 +1,66 @@
 
-from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+from db.db import database
+from routes.auth_rota import auth_rota
+from routes.usuarios_rota import usuarios_rota
+from routes.clientes_rota import clientes_rota
+from routes.telefones_clientes_rota import telefones_clientes_rota
+from routes.marcas_veiculo_rota import marcas_veiculo_rota
+from routes.modelos_veiculo_rota import modelos_veiculo_rota
+from routes.veiculos_rota import veiculos_rota
+
+
+
+DIRETORIO_APP = Path(__file__).resolve().parent
+DIRETORIO_STATIC = DIRETORIO_APP / "static"
+DIRETORIO_TEMPLATES = DIRETORIO_APP / "templates"
+
+templates = Jinja2Templates(directory=str(DIRETORIO_TEMPLATES))
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        database.start_tunnel()
+        yield
+    finally:
+        database.stop_tunnel()
+
 
 app = FastAPI(
     title="Sistema de Estacionamento",
     description="API para gerenciamento de estacionamento",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
-@app.get("/")
-def inicio():
-    return {"mensagem": "API do Sistema de Estacionamento funcionando!"}
+app.mount(
+    "/static",
+    StaticFiles(directory=str(DIRETORIO_STATIC)),
+    name="static"
+)
+
+app.include_router(auth_rota)
+app.include_router(usuarios_rota)
+app.include_router(clientes_rota)
+app.include_router(telefones_clientes_rota)
+app.include_router(marcas_veiculo_rota)
+app.include_router(modelos_veiculo_rota)
+app.include_router(veiculos_rota)
+
+
+
+
+@app.get("/", include_in_schema=False)
+def inicio(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="login.html",
+        context={}
+    )

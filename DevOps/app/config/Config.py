@@ -2,7 +2,10 @@
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 PASTA_APP = Path(__file__).resolve().parents[1]
+ARQUIVO_ENV = PASTA_APP / ".env"
+
 
 class Settings(BaseSettings):
     ssh_host: str
@@ -23,9 +26,10 @@ class Settings(BaseSettings):
     JWT_ISSUER: str = "sistema-estacionamento"
 
     model_config = SettingsConfigDict(
-        env_file=PASTA_APP / ".env",
+        env_file=ARQUIVO_ENV,
         env_file_encoding="utf-8",
         extra="ignore"
     )
+
 
 settings = Settings()

@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#292137">
+    <title>Login | Estacionamento</title>
+    <link rel="stylesheet" href="/static/css/login.css">
+</head>
+<body>
+    <main class="pagina-login">
+        <section class="painel-login" aria-labelledby="titulo-login">
+            <header class="cabecalho-login">
+                <div class="simbolo-estacionamento" aria-hidden="true">✦</div>
+                <p class="subtitulo-login">BEM-VINDO AO</p>
+                <h1 id="titulo-login">Estacionamento</h1>
+                <p class="descricao-login">Acesse sua conta para continuar.</p>
+            </header>
+
+            <form id="formulario-login" action="/api/login" method="post">
+                <div class="campo-login">
+                    <label for="email">E-mail</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="seuemail@exemplo.com"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+
+                <div class="campo-login">
+                    <label for="senha">Senha</label>
+                    <div class="campo-senha">
+                        <input
+                            type="password"
+                            id="senha"
+                            name="senha"
+                            placeholder="Digite sua senha"
+                            autocomplete="current-password"
+                            required
+                        >
+                        <button
+                            type="button"
+                            id="alternar-senha"
+                            class="botao-visualizar-senha"
+                            aria-label="Mostrar senha"
+                            aria-pressed="false"
+                        >◉</button>
+                    </div>
+                </div>
+
+                <p id="mensagem-login" class="mensagem-login" role="alert" aria-live="polite"></p>
+
+                <button type="submit" class="botao-entrar">Entrar</button>
+            </form>
+
+            <footer class="rodape-login">
+                <span class="detalhe-ornamental" aria-hidden="true">✧</span>
+                <p>Um espaço seguro para cada jornada.</p>
+            </footer>
+        </section>
+    </main>
+</body>
+</html>
