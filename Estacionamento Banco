@@ -3,16 +3,7 @@
 -- Execute este arquivo com um usuário autorizado a criar banco, tabelas e triggers.
 -- Em produção, prefira aplicar migrações com um usuário administrativo separado
 -- e conceder ao usuário da aplicação somente as permissões necessárias.
-
-CREATE DATABASE IF NOT EXISTS estacionamento
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_0900_ai_ci;
-
-USE estacionamento;
-
-SET NAMES utf8mb4;
-
-CREATE TABLE IF NOT EXISTS usuarios (
+CREATE TABLE IF NOT EXISTS users (
   id_usuario BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   nome VARCHAR(120) NOT NULL,
   email VARCHAR(254) NOT NULL,
@@ -22,42 +13,51 @@ CREATE TABLE IF NOT EXISTS usuarios (
   dt_cadastro DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   dt_atualizacao DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   PRIMARY KEY (id_usuario),
-  CONSTRAINT uq_usuarios_email UNIQUE (email),
-  CONSTRAINT chk_usuarios_nome CHECK (CHAR_LENGTH(TRIM(nome)) > 0),
-  CONSTRAINT chk_usuarios_email CHECK (email LIKE '%_@_%._%')
+  CONSTRAINT uq_users_email UNIQUE (email),
+  CONSTRAINT chk_users_nome CHECK (CHAR_LENGTH(TRIM(nome)) > 0),
+  CONSTRAINT chk_users_email CHECK (email LIKE '%_@_%._%')
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS clientes (
-  id_cliente BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS clients (
+  id_clients BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   nome_completo VARCHAR(150) NOT NULL,
   documento VARCHAR(14) NULL,
   email VARCHAR(254) NULL,
   ativo BOOLEAN NOT NULL DEFAULT TRUE,
   dt_cadastro DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   dt_atualizacao DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-  PRIMARY KEY (id_cliente),
-  CONSTRAINT uq_clientes_documento UNIQUE (documento),
-  CONSTRAINT chk_clientes_nome CHECK (CHAR_LENGTH(TRIM(nome_completo)) > 0),
-  CONSTRAINT chk_clientes_email CHECK (email IS NULL OR email LIKE '%_@_%._%')
+  PRIMARY KEY (id_clients),
+  CONSTRAINT uq_clients_documento UNIQUE (documento),
+  CONSTRAINT chk_clients_nome CHECK (CHAR_LENGTH(TRIM(nome_completo)) > 0),
+  CONSTRAINT chk_clients_email CHECK (email IS NULL OR email LIKE '%_@_%._%')
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS telefones_cliente (
+
+CREATE TABLE IF NOT EXISTS telefones_clients (
   id_telefone BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  id_cliente BIGINT UNSIGNED NOT NULL,
+  id_clients BIGINT UNSIGNED NOT NULL,
   numero VARCHAR(20) NOT NULL,
   tipo ENUM('CELULAR','FIXO','RECADO') NOT NULL DEFAULT 'CELULAR',
   nome_contato VARCHAR(120) NULL,
   principal BOOLEAN NOT NULL DEFAULT FALSE,
   dt_cadastro DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  telefone_principal_cliente BIGINT UNSIGNED
-    GENERATED ALWAYS AS (CASE WHEN principal = TRUE THEN id_cliente ELSE NULL END) STORED,
+  telefone_principal_clients BIGINT UNSIGNED
+    GENERATED ALWAYS AS (
+      CASE WHEN principal = TRUE THEN id_clients ELSE NULL END
+    ) STORED,
   PRIMARY KEY (id_telefone),
-  UNIQUE KEY uq_telefone_principal_cliente (telefone_principal_cliente),
-  KEY ix_telefones_cliente (id_cliente),
-  CONSTRAINT fk_telefones_cliente_cliente FOREIGN KEY (id_cliente)
-    REFERENCES clientes(id_cliente) ON UPDATE RESTRICT ON DELETE RESTRICT,
-  CONSTRAINT chk_telefone_numero CHECK (CHAR_LENGTH(TRIM(numero)) >= 8)
+  UNIQUE KEY uq_telefone_principal_clients (telefone_principal_clients),
+  KEY ix_telefones_clients (id_clients),
+  CONSTRAINT fk_telefones_clients_clients
+    FOREIGN KEY (id_clients)
+    REFERENCES clients(id_clients)
+    ON UPDATE RESTRICT
+    ON DELETE RESTRICT,
+  CONSTRAINT chk_telefone_numero
+    CHECK (CHAR_LENGTH(TRIM(numero)) >= 8)
 ) ENGINE=InnoDB;
+
+
 
 CREATE TABLE IF NOT EXISTS marcas_veiculo (
   id_marca BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS modelos_veiculo (
 
 CREATE TABLE IF NOT EXISTS veiculos (
   id_veiculo BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  id_cliente BIGINT UNSIGNED NOT NULL,
+  id_clients BIGINT UNSIGNED NOT NULL,
   id_modelo BIGINT UNSIGNED NOT NULL,
   placa VARCHAR(7) NOT NULL,
   cor ENUM('PRETO','BRANCO','PRATA','CINZA','VERMELHO','AZUL','VERDE','AMARELO','MARROM','BEGE','DOURADO','OUTRA') NOT NULL DEFAULT 'OUTRA',
@@ -97,10 +97,10 @@ CREATE TABLE IF NOT EXISTS veiculos (
   dt_atualizacao DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   PRIMARY KEY (id_veiculo),
   CONSTRAINT uq_veiculos_placa UNIQUE (placa),
-  KEY ix_veiculos_cliente (id_cliente),
+  KEY ix_veiculos_clients (id_clients),
   KEY ix_veiculos_modelo (id_modelo),
-  CONSTRAINT fk_veiculos_cliente FOREIGN KEY (id_cliente)
-    REFERENCES clientes(id_cliente) ON UPDATE RESTRICT ON DELETE RESTRICT,
+  CONSTRAINT fk_veiculos_clients FOREIGN KEY (id_clients)
+    REFERENCES clients(id_clients) ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT fk_veiculos_modelo FOREIGN KEY (id_modelo)
     REFERENCES modelos_veiculo(id_modelo) ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT chk_veiculo_ano CHECK (ano_modelo IS NULL OR ano_modelo BETWEEN 1950 AND 2155),
@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS vagas (
 
 CREATE TABLE IF NOT EXISTS vagas_mensalistas (
   id_vinculo BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  id_cliente BIGINT UNSIGNED NOT NULL,
+  id_clients BIGINT UNSIGNED NOT NULL,
   id_vaga BIGINT UNSIGNED NOT NULL,
   data_inicio DATE NOT NULL,
   data_fim DATE NULL,
@@ -130,10 +130,10 @@ CREATE TABLE IF NOT EXISTS vagas_mensalistas (
     GENERATED ALWAYS AS (CASE WHEN data_fim IS NULL THEN id_vaga ELSE NULL END) STORED,
   PRIMARY KEY (id_vinculo),
   UNIQUE KEY uq_vaga_mensalista_atual (vaga_atual_id),
-  KEY ix_vinculos_cliente (id_cliente, data_fim),
+  KEY ix_vinculos_clients (id_clients, data_fim),
   KEY ix_vinculos_vaga (id_vaga, data_fim),
-  CONSTRAINT fk_vinculo_cliente FOREIGN KEY (id_cliente)
-    REFERENCES clientes(id_cliente) ON UPDATE RESTRICT ON DELETE RESTRICT,
+  CONSTRAINT fk_vinculo_clients FOREIGN KEY (id_clients)
+    REFERENCES clients(id_clients) ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT fk_vinculo_vaga FOREIGN KEY (id_vaga)
     REFERENCES vagas(id_vaga) ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT chk_vinculo_datas CHECK (data_fim IS NULL OR data_fim >= data_inicio)
@@ -186,9 +186,9 @@ CREATE TABLE IF NOT EXISTS movimentacoes (
   CONSTRAINT fk_mov_vaga FOREIGN KEY (id_vaga)
     REFERENCES vagas(id_vaga) ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT fk_mov_usuario_entrada FOREIGN KEY (id_usuario_entrada)
-    REFERENCES usuarios(id_usuario) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    REFERENCES users(id_usuario) ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT fk_mov_usuario_saida FOREIGN KEY (id_usuario_saida)
-    REFERENCES usuarios(id_usuario) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    REFERENCES users(id_usuario) ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT fk_mov_tarifa FOREIGN KEY (id_tarifa)
     REFERENCES tarifas(id_tarifa) ON UPDATE RESTRICT ON DELETE RESTRICT,
   CONSTRAINT chk_mov_datas CHECK (data_hora_saida IS NULL OR data_hora_saida >= data_hora_entrada),
@@ -218,7 +218,7 @@ CREATE TABLE IF NOT EXISTS auditoria (
   KEY ix_auditoria_usuario_data (id_usuario, data_hora),
   KEY ix_auditoria_entidade_registro (entidade, id_registro, data_hora),
   CONSTRAINT fk_auditoria_usuario FOREIGN KEY (id_usuario)
-    REFERENCES usuarios(id_usuario) ON UPDATE RESTRICT ON DELETE SET NULL
+    REFERENCES users(id_usuario) ON UPDATE RESTRICT ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- TRIGGERS DE INTEGRIDADE
@@ -251,7 +251,7 @@ BEGIN
   DECLARE v_tipo VARCHAR(20);
   SELECT tipo INTO v_tipo FROM vagas WHERE id_vaga = NEW.id_vaga;
   IF v_tipo <> 'MENSALISTA' THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Somente vagas do tipo MENSALISTA podem ser vinculadas a clientes.';
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Somente vagas do tipo MENSALISTA podem ser vinculadas a clients.';
   END IF;
 END$$
 
@@ -262,7 +262,7 @@ BEGIN
   DECLARE v_tipo VARCHAR(20);
   SELECT tipo INTO v_tipo FROM vagas WHERE id_vaga = NEW.id_vaga;
   IF v_tipo <> 'MENSALISTA' THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Somente vagas do tipo MENSALISTA podem ser vinculadas a clientes.';
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Somente vagas do tipo MENSALISTA podem ser vinculadas a clients.';
   END IF;
 END$$
 
@@ -272,11 +272,11 @@ FOR EACH ROW
 BEGIN
   DECLARE v_tipo_vaga VARCHAR(20);
   DECLARE v_status_vaga VARCHAR(20);
-  DECLARE v_cliente_veiculo BIGINT UNSIGNED;
+  DECLARE v_clients_veiculo BIGINT UNSIGNED;
   DECLARE v_vinculo BIGINT UNSIGNED DEFAULT NULL;
   SELECT tipo, status INTO v_tipo_vaga, v_status_vaga
     FROM vagas WHERE id_vaga = NEW.id_vaga;
-  SELECT id_cliente INTO v_cliente_veiculo
+  SELECT id_clients INTO v_clients_veiculo
     FROM veiculos WHERE id_veiculo = NEW.id_veiculo;
   IF v_status_vaga <> 'ATIVA' THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Não é permitido iniciar movimentação em vaga bloqueada ou inativa.';
@@ -290,11 +290,11 @@ BEGIN
     END IF;
     SELECT id_vinculo INTO v_vinculo FROM vagas_mensalistas
       WHERE id_vaga = NEW.id_vaga
-        AND id_cliente = v_cliente_veiculo
+        AND id_clients = v_clients_veiculo
         AND data_fim IS NULL
       LIMIT 1;
     IF v_vinculo IS NULL THEN
-      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'O cliente proprietário do veículo não possui vínculo ativo com esta vaga mensalista.';
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'O clients proprietário do veículo não possui vínculo ativo com esta vaga mensalista.';
     END IF;
   END IF;
   IF NEW.modalidade = 'HORISTA' AND NEW.id_tarifa IS NULL THEN
@@ -308,7 +308,7 @@ FOR EACH ROW
 BEGIN
   DECLARE v_tipo_vaga VARCHAR(20);
   DECLARE v_status_vaga VARCHAR(20);
-  DECLARE v_cliente_veiculo BIGINT UNSIGNED;
+  DECLARE v_clients_veiculo BIGINT UNSIGNED;
   DECLARE v_vinculo BIGINT UNSIGNED DEFAULT NULL;
   IF OLD.data_hora_saida IS NOT NULL AND NEW.data_hora_saida IS NULL THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Movimentação encerrada não pode ser reaberta.';
@@ -323,7 +323,7 @@ BEGIN
   END IF;
   SELECT tipo, status INTO v_tipo_vaga, v_status_vaga
     FROM vagas WHERE id_vaga = NEW.id_vaga;
-  SELECT id_cliente INTO v_cliente_veiculo
+  SELECT id_clients INTO v_clients_veiculo
     FROM veiculos WHERE id_veiculo = NEW.id_veiculo;
   IF NEW.modalidade = 'HORISTA' AND v_tipo_vaga <> 'ROTATIVA' THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Horistas só podem utilizar vagas rotativas.';
@@ -334,11 +334,11 @@ BEGIN
     END IF;
     SELECT id_vinculo INTO v_vinculo FROM vagas_mensalistas
       WHERE id_vaga = NEW.id_vaga
-        AND id_cliente = v_cliente_veiculo
+        AND id_clients = v_clients_veiculo
         AND data_fim IS NULL
       LIMIT 1;
     IF v_vinculo IS NULL THEN
-      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'O cliente proprietário do veículo não possui vínculo ativo com esta vaga mensalista.';
+      SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'O clients proprietário do veículo não possui vínculo ativo com esta vaga mensalista.';
     END IF;
   END IF;
 END$$
@@ -354,112 +354,112 @@ DELIMITER ;
 
 DELIMITER $$
 
-CREATE TRIGGER aiud_auditoria_usuarios_insert
-AFTER INSERT ON usuarios
+CREATE TRIGGER aiud_auditoria_users_insert
+AFTER INSERT ON users
 FOR EACH ROW
 BEGIN
   INSERT INTO auditoria
     (id_usuario, entidade, id_registro, acao, resultado, origem, identificador_requisicao, detalhes)
   VALUES
-    (NULLIF(@id_usuario_auditoria, 0), 'usuarios', CAST(NEW.id_usuario AS CHAR), 'CRIACAO', 'SUCESSO',
+    (NULLIF(@id_usuario_auditoria, 0), 'users', CAST(NEW.id_usuario AS CHAR), 'CRIACAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
      JSON_OBJECT('operacao', 'INSERT', 'campos_relevantes', JSON_ARRAY('nome', 'email', 'perfil', 'ativo')));
 END$$
 
-CREATE TRIGGER aiud_auditoria_usuarios_update
-AFTER UPDATE ON usuarios
+CREATE TRIGGER aiud_auditoria_users_update
+AFTER UPDATE ON users
 FOR EACH ROW
 BEGIN
   INSERT INTO auditoria
     (id_usuario, entidade, id_registro, acao, resultado, origem, identificador_requisicao, detalhes)
   VALUES
-    (NULLIF(@id_usuario_auditoria, 0), 'usuarios', CAST(NEW.id_usuario AS CHAR), 'ALTERACAO', 'SUCESSO',
+    (NULLIF(@id_usuario_auditoria, 0), 'users', CAST(NEW.id_usuario AS CHAR), 'ALTERACAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
      JSON_OBJECT('operacao', 'UPDATE', 'campos_relevantes', JSON_ARRAY('nome', 'email', 'perfil', 'ativo')));
 END$$
 
-CREATE TRIGGER aiud_auditoria_usuarios_delete
-AFTER DELETE ON usuarios
+CREATE TRIGGER aiud_auditoria_users_delete
+AFTER DELETE ON users
 FOR EACH ROW
 BEGIN
   INSERT INTO auditoria
     (id_usuario, entidade, id_registro, acao, resultado, origem, identificador_requisicao, detalhes)
   VALUES
-    (NULLIF(@id_usuario_auditoria, 0), 'usuarios', CAST(OLD.id_usuario AS CHAR), 'EXCLUSAO', 'SUCESSO',
+    (NULLIF(@id_usuario_auditoria, 0), 'users', CAST(OLD.id_usuario AS CHAR), 'EXCLUSAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
      JSON_OBJECT('operacao', 'DELETE', 'campos_relevantes', JSON_ARRAY('nome', 'email', 'perfil', 'ativo')));
 END$$
 
-CREATE TRIGGER aiud_auditoria_clientes_insert
-AFTER INSERT ON clientes
+CREATE TRIGGER aiud_auditoria_clients_insert
+AFTER INSERT ON clients
 FOR EACH ROW
 BEGIN
   INSERT INTO auditoria
     (id_usuario, entidade, id_registro, acao, resultado, origem, identificador_requisicao, detalhes)
   VALUES
-    (NULLIF(@id_usuario_auditoria, 0), 'clientes', CAST(NEW.id_cliente AS CHAR), 'CRIACAO', 'SUCESSO',
+    (NULLIF(@id_usuario_auditoria, 0), 'clients', CAST(NEW.id_clients AS CHAR), 'CRIACAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
      JSON_OBJECT('operacao', 'INSERT', 'campos_relevantes', JSON_ARRAY('nome_completo', 'ativo')));
 END$$
 
-CREATE TRIGGER aiud_auditoria_clientes_update
-AFTER UPDATE ON clientes
+CREATE TRIGGER aiud_auditoria_clients_update
+AFTER UPDATE ON clients
 FOR EACH ROW
 BEGIN
   INSERT INTO auditoria
     (id_usuario, entidade, id_registro, acao, resultado, origem, identificador_requisicao, detalhes)
   VALUES
-    (NULLIF(@id_usuario_auditoria, 0), 'clientes', CAST(NEW.id_cliente AS CHAR), 'ALTERACAO', 'SUCESSO',
+    (NULLIF(@id_usuario_auditoria, 0), 'clients', CAST(NEW.id_clients AS CHAR), 'ALTERACAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
      JSON_OBJECT('operacao', 'UPDATE', 'campos_relevantes', JSON_ARRAY('nome_completo', 'ativo')));
 END$$
 
-CREATE TRIGGER aiud_auditoria_clientes_delete
-AFTER DELETE ON clientes
+CREATE TRIGGER aiud_auditoria_clients_delete
+AFTER DELETE ON clients
 FOR EACH ROW
 BEGIN
   INSERT INTO auditoria
     (id_usuario, entidade, id_registro, acao, resultado, origem, identificador_requisicao, detalhes)
   VALUES
-    (NULLIF(@id_usuario_auditoria, 0), 'clientes', CAST(OLD.id_cliente AS CHAR), 'EXCLUSAO', 'SUCESSO',
+    (NULLIF(@id_usuario_auditoria, 0), 'clients', CAST(OLD.id_clients AS CHAR), 'EXCLUSAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
      JSON_OBJECT('operacao', 'DELETE', 'campos_relevantes', JSON_ARRAY('nome_completo', 'ativo')));
 END$$
 
-CREATE TRIGGER aiud_auditoria_telefones_cliente_insert
-AFTER INSERT ON telefones_cliente
+CREATE TRIGGER aiud_auditoria_telefones_clients_insert
+AFTER INSERT ON telefones_clients
 FOR EACH ROW
 BEGIN
   INSERT INTO auditoria
     (id_usuario, entidade, id_registro, acao, resultado, origem, identificador_requisicao, detalhes)
   VALUES
-    (NULLIF(@id_usuario_auditoria, 0), 'telefones_cliente', CAST(NEW.id_telefone AS CHAR), 'CRIACAO', 'SUCESSO',
+    (NULLIF(@id_usuario_auditoria, 0), 'telefones_clients', CAST(NEW.id_telefone AS CHAR), 'CRIACAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
-     JSON_OBJECT('operacao', 'INSERT', 'campos_relevantes', JSON_ARRAY('id_cliente', 'tipo', 'principal')));
+     JSON_OBJECT('operacao', 'INSERT', 'campos_relevantes', JSON_ARRAY('id_clients', 'tipo', 'principal')));
 END$$
 
-CREATE TRIGGER aiud_auditoria_telefones_cliente_update
-AFTER UPDATE ON telefones_cliente
+CREATE TRIGGER aiud_auditoria_telefones_clients_update
+AFTER UPDATE ON telefones_clients
 FOR EACH ROW
 BEGIN
   INSERT INTO auditoria
     (id_usuario, entidade, id_registro, acao, resultado, origem, identificador_requisicao, detalhes)
   VALUES
-    (NULLIF(@id_usuario_auditoria, 0), 'telefones_cliente', CAST(NEW.id_telefone AS CHAR), 'ALTERACAO', 'SUCESSO',
+    (NULLIF(@id_usuario_auditoria, 0), 'telefones_clients', CAST(NEW.id_telefone AS CHAR), 'ALTERACAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
-     JSON_OBJECT('operacao', 'UPDATE', 'campos_relevantes', JSON_ARRAY('id_cliente', 'tipo', 'principal')));
+     JSON_OBJECT('operacao', 'UPDATE', 'campos_relevantes', JSON_ARRAY('id_clients', 'tipo', 'principal')));
 END$$
 
-CREATE TRIGGER aiud_auditoria_telefones_cliente_delete
-AFTER DELETE ON telefones_cliente
+CREATE TRIGGER aiud_auditoria_telefones_clients_delete
+AFTER DELETE ON telefones_clients
 FOR EACH ROW
 BEGIN
   INSERT INTO auditoria
     (id_usuario, entidade, id_registro, acao, resultado, origem, identificador_requisicao, detalhes)
   VALUES
-    (NULLIF(@id_usuario_auditoria, 0), 'telefones_cliente', CAST(OLD.id_telefone AS CHAR), 'EXCLUSAO', 'SUCESSO',
+    (NULLIF(@id_usuario_auditoria, 0), 'telefones_clients', CAST(OLD.id_telefone AS CHAR), 'EXCLUSAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
-     JSON_OBJECT('operacao', 'DELETE', 'campos_relevantes', JSON_ARRAY('id_cliente', 'tipo', 'principal')));
+     JSON_OBJECT('operacao', 'DELETE', 'campos_relevantes', JSON_ARRAY('id_clients', 'tipo', 'principal')));
 END$$
 
 CREATE TRIGGER aiud_auditoria_marcas_veiculo_insert
@@ -543,7 +543,7 @@ BEGIN
   VALUES
     (NULLIF(@id_usuario_auditoria, 0), 'veiculos', CAST(NEW.id_veiculo AS CHAR), 'CRIACAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
-     JSON_OBJECT('operacao', 'INSERT', 'campos_relevantes', JSON_ARRAY('id_cliente', 'id_modelo', 'placa', 'cor', 'ano_modelo', 'ativo')));
+     JSON_OBJECT('operacao', 'INSERT', 'campos_relevantes', JSON_ARRAY('id_clients', 'id_modelo', 'placa', 'cor', 'ano_modelo', 'ativo')));
 END$$
 
 CREATE TRIGGER aiud_auditoria_veiculos_update
@@ -555,7 +555,7 @@ BEGIN
   VALUES
     (NULLIF(@id_usuario_auditoria, 0), 'veiculos', CAST(NEW.id_veiculo AS CHAR), 'ALTERACAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
-     JSON_OBJECT('operacao', 'UPDATE', 'campos_relevantes', JSON_ARRAY('id_cliente', 'id_modelo', 'placa', 'cor', 'ano_modelo', 'ativo')));
+     JSON_OBJECT('operacao', 'UPDATE', 'campos_relevantes', JSON_ARRAY('id_clients', 'id_modelo', 'placa', 'cor', 'ano_modelo', 'ativo')));
 END$$
 
 CREATE TRIGGER aiud_auditoria_veiculos_delete
@@ -567,7 +567,7 @@ BEGIN
   VALUES
     (NULLIF(@id_usuario_auditoria, 0), 'veiculos', CAST(OLD.id_veiculo AS CHAR), 'EXCLUSAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
-     JSON_OBJECT('operacao', 'DELETE', 'campos_relevantes', JSON_ARRAY('id_cliente', 'id_modelo', 'placa', 'cor', 'ano_modelo', 'ativo')));
+     JSON_OBJECT('operacao', 'DELETE', 'campos_relevantes', JSON_ARRAY('id_clients', 'id_modelo', 'placa', 'cor', 'ano_modelo', 'ativo')));
 END$$
 
 CREATE TRIGGER aiud_auditoria_vagas_insert
@@ -615,7 +615,7 @@ BEGIN
   VALUES
     (NULLIF(@id_usuario_auditoria, 0), 'vagas_mensalistas', CAST(NEW.id_vinculo AS CHAR), 'CRIACAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
-     JSON_OBJECT('operacao', 'INSERT', 'campos_relevantes', JSON_ARRAY('id_cliente', 'id_vaga', 'data_inicio', 'data_fim')));
+     JSON_OBJECT('operacao', 'INSERT', 'campos_relevantes', JSON_ARRAY('id_clients', 'id_vaga', 'data_inicio', 'data_fim')));
 END$$
 
 CREATE TRIGGER aiud_auditoria_vagas_mensalistas_update
@@ -627,7 +627,7 @@ BEGIN
   VALUES
     (NULLIF(@id_usuario_auditoria, 0), 'vagas_mensalistas', CAST(NEW.id_vinculo AS CHAR), 'ALTERACAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
-     JSON_OBJECT('operacao', 'UPDATE', 'campos_relevantes', JSON_ARRAY('id_cliente', 'id_vaga', 'data_inicio', 'data_fim')));
+     JSON_OBJECT('operacao', 'UPDATE', 'campos_relevantes', JSON_ARRAY('id_clients', 'id_vaga', 'data_inicio', 'data_fim')));
 END$$
 
 CREATE TRIGGER aiud_auditoria_vagas_mensalistas_delete
@@ -639,7 +639,7 @@ BEGIN
   VALUES
     (NULLIF(@id_usuario_auditoria, 0), 'vagas_mensalistas', CAST(OLD.id_vinculo AS CHAR), 'EXCLUSAO', 'SUCESSO',
      LEFT(@origem_auditoria, 45), LEFT(@identificador_requisicao, 64),
-     JSON_OBJECT('operacao', 'DELETE', 'campos_relevantes', JSON_ARRAY('id_cliente', 'id_vaga', 'data_inicio', 'data_fim')));
+     JSON_OBJECT('operacao', 'DELETE', 'campos_relevantes', JSON_ARRAY('id_clients', 'id_vaga', 'data_inicio', 'data_fim')));
 END$$
 
 CREATE TRIGGER aiud_auditoria_tarifas_insert
@@ -724,5 +724,5 @@ DELIMITER ;
 -- 4) As triggers não substituem autenticação/autorização no FastAPI.
 -- 5) Para garantir autoria, o backend deve definir as variáveis de sessão acima na mesma
 --    conexão usada pela transação. Acesso SQL direto deve ser restrito e auditado.
--- 6) Não apagar usuários/clientes/veículos com histórico; desativar quando aplicável.
+-- 6) Não apagar usuários/clients/veículos com histórico; desativar quando aplicável.
 -- 7) A política exata de tarifa (arredondamento, tolerância, frações) ainda deve ser definida.
