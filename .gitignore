@@ -1,0 +1,54 @@
+
+# Variáveis de ambiente e segredos
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Ambientes virtuais
+venv/
+.venv/
+env/
+ENV/
+
+# Ferramentas de desenvolvimento
+.vscode/
+.idea/
+.spyproject/
+
+# Testes e cobertura
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Logs
+*.log
+logs/
+
+# Banco de dados local e arquivos temporários
+*.sqlite
+*.sqlite3
+*.db
+*.tmp
+*.bak
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Arquivos de build e distribuição
+build/
+dist/
+*.egg-info/
+
+# Arquivos temporários
+*.swp
+*.swo
+*~
