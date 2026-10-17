@@ -1,5 +1,8 @@
 
 from typing import Optional
+from datetime import datetime
+from typing import Optional
+from sqlmodel import SQLModel
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlmodel import Session
@@ -33,8 +36,8 @@ class VeiculoResposta(BaseModel):
     cor: CorVeiculo
     ano_modelo: Optional[int]
     ativo: bool
-    dt_cadastro: Optional[str] = None
-    dt_atualizacao: Optional[str] = None
+    dt_cadastro: Optional[datetime] = None
+    dt_atualizacao: Optional[datetime] = None
 
 @veiculos_rota.get("", response_model=list[VeiculoResposta], status_code=status.HTTP_200_OK)
 def obter_veiculos(db: Session = Depends(database.get_db)):

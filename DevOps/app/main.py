@@ -1,4 +1,3 @@
-
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -18,8 +17,6 @@ from routes.vagas_rota import vagas_rota
 from routes.vagas_mensalistas_rota import vagas_mensalistas_rota
 from routes.tarifas_rota import tarifas_rota
 from routes.movimentacoes_rota import movimentacoes_rota
-
-
 
 DIRETORIO_APP = Path(__file__).resolve().parent
 DIRETORIO_STATIC = DIRETORIO_APP / "static"
@@ -60,8 +57,7 @@ app.include_router(veiculos_rota)
 app.include_router(vagas_rota)
 app.include_router(vagas_mensalistas_rota)
 app.include_router(tarifas_rota)
-app.include_router(movimentacoes_rota)  
-
+app.include_router(movimentacoes_rota)
 
 
 @app.get("/", include_in_schema=False)
@@ -72,6 +68,7 @@ def inicio(request: Request):
         context={}
     )
 
+
 @app.get("/dashboard-gestor", include_in_schema=False)
 def dashboard_gestor(request: Request):
     return templates.TemplateResponse(
@@ -80,10 +77,20 @@ def dashboard_gestor(request: Request):
         context={}
     )
 
+
 @app.get("/clientes", include_in_schema=False)
 def pagina_clientes(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="clientes.html",
+        context={}
+    )
+
+
+@app.get("/veiculos", include_in_schema=False)
+def pagina_veiculos(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="veiculos.html",
         context={}
     )

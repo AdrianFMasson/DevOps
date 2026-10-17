@@ -1,10 +1,9 @@
-
 from typing import Optional
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlmodel import Session
 from db.db import database
-from entities.models import MarcaVeiculo
 from controller.MarcasVeiculoController import listar_marcas, buscar_marca, cadastrar_marca, atualizar_marca, desativar_marca
 
 marcas_veiculo_rota = APIRouter(prefix="/api/marcas-veiculo", tags=["Marcas de veículos"])
@@ -21,8 +20,8 @@ class MarcaResposta(BaseModel):
     id_marca: int
     nome: str
     ativo: bool
-    dt_cadastro: Optional[str] = None
-    dt_atualizacao: Optional[str] = None
+    dt_cadastro: Optional[datetime] = None
+    dt_atualizacao: Optional[datetime] = None
 
 @marcas_veiculo_rota.get("", response_model=list[MarcaResposta], status_code=status.HTTP_200_OK)
 def obter_marcas(db: Session = Depends(database.get_db)):

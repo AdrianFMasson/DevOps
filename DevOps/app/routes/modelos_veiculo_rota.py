@@ -1,10 +1,9 @@
-
 from typing import Optional
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlmodel import Session
 from db.db import database
-from entities.models import ModeloVeiculo
 from controller.ModelosVeiculoController import listar_modelos, buscar_modelo, cadastrar_modelo, atualizar_modelo, desativar_modelo
 
 modelos_veiculo_rota = APIRouter(prefix="/api/modelos-veiculo", tags=["Modelos de veículos"])
@@ -24,8 +23,8 @@ class ModeloResposta(BaseModel):
     id_marca: int
     nome: str
     ativo: bool
-    dt_cadastro: Optional[str] = None
-    dt_atualizacao: Optional[str] = None
+    dt_cadastro: Optional[datetime] = None
+    dt_atualizacao: Optional[datetime] = None
 
 @modelos_veiculo_rota.get("", response_model=list[ModeloResposta], status_code=status.HTTP_200_OK)
 def obter_modelos(db: Session = Depends(database.get_db)):
