@@ -14,6 +14,10 @@ from routes.telefones_clientes_rota import telefones_clientes_rota
 from routes.marcas_veiculo_rota import marcas_veiculo_rota
 from routes.modelos_veiculo_rota import modelos_veiculo_rota
 from routes.veiculos_rota import veiculos_rota
+from routes.vagas_rota import vagas_rota
+from routes.vagas_mensalistas_rota import vagas_mensalistas_rota
+from routes.tarifas_rota import tarifas_rota
+from routes.movimentacoes_rota import movimentacoes_rota
 
 
 
@@ -53,7 +57,10 @@ app.include_router(telefones_clientes_rota)
 app.include_router(marcas_veiculo_rota)
 app.include_router(modelos_veiculo_rota)
 app.include_router(veiculos_rota)
-
+app.include_router(vagas_rota)
+app.include_router(vagas_mensalistas_rota)
+app.include_router(tarifas_rota)
+app.include_router(movimentacoes_rota)  
 
 
 
@@ -62,5 +69,21 @@ def inicio(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="login.html",
+        context={}
+    )
+
+@app.get("/dashboard-gestor", include_in_schema=False)
+def dashboard_gestor(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard_admin.html",
+        context={}
+    )
+
+@app.get("/clientes", include_in_schema=False)
+def pagina_clientes(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="clientes.html",
         context={}
     )

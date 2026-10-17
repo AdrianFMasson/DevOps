@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f7f0ee">
+    <title>Clientes | Estacionamento</title>
+    <link rel="stylesheet" href="/static/css/dashboard_admin.css">
+    <link rel="stylesheet" href="/static/css/clientes.css">
+    <script src="/static/js/clientes.js" defer></script>
+</head>
+<body>
+    <div class="pagina">
+        <aside class="menu-lateral">
+            <div class="identidade">
+                <div class="identidade-icone">E</div>
+                <div class="identidade-texto">
+                    <h1>Estacionamento</h1>
+                    <p>Painel administrativo</p>
+                </div>
+            </div>
+
+            <nav class="navegacao" aria-label="Menu principal">
+                <a href="/dashboard-gestor" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">▦</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/clientes" class="item-menu ativo" aria-current="page">
+                    <span class="icone-menu" aria-hidden="true">♙</span>
+                    <span>Clientes</span>
+                </a>
+                <a href="/veiculos" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">🚗</span>
+                    <span>Veículos</span>
+                </a>
+                <a href="/vagas" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">▤</span>
+                    <span>Vagas</span>
+                </a>
+                <a href="/movimentacoes" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">⇄</span>
+                    <span>Movimentações</span>
+                </a>
+                <a href="/usuarios" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">♧</span>
+                    <span>Usuários</span>
+                </a>
+                <a href="/tarifas" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">R$</span>
+                    <span>Tarifas</span>
+                </a>
+                <a href="/faturamento" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">▥</span>
+                    <span>Faturamento</span>
+                </a>
+            </nav>
+
+            <div class="rodape-menu">
+                <div class="usuario-resumo">
+                    <div class="usuario-avatar" aria-hidden="true">A</div>
+                    <div class="usuario-informacoes">
+                        <strong>{{ usuario.nome if usuario is defined else "Administrador" }}</strong>
+                        <span>Administrador</span>
+                    </div>
+                </div>
+                <a href="/logout" class="botao-sair">Sair da conta</a>
+            </div>
+        </aside>
+
+        <main class="conteudo-principal">
+            <header class="cabecalho">
+                <div class="cabecalho-titulo">
+                    <p class="texto-superior">ÁREA ADMINISTRATIVA</p>
+                    <h2>Clientes</h2>
+                    <p class="descricao-cabecalho">Consulte e gerencie os clientes cadastrados no estacionamento.</p>
+                </div>
+                <div class="cabecalho-acoes">
+                    <span class="etiqueta-perfil">Administrador</span>
+                </div>
+            </header>
+
+            <section class="secao-clientes" aria-labelledby="titulo-clientes">
+                <div class="titulo-secao">
+                    <div>
+                        <h3 id="titulo-clientes">Gerenciamento de clientes</h3>
+                        <p>Pesquise os cadastros ou adicione um novo cliente.</p>
+                    </div>
+                    <button type="button" id="botao-novo-cliente" class="botao-primario">
+                        + Novo cliente
+                    </button>
+                </div>
+
+                <section id="painel-formulario-cliente" class="painel-formulario-cliente" hidden>
+                    <div class="titulo-secao">
+                        <div>
+                            <h3 id="titulo-formulario-cliente">Cadastrar cliente</h3>
+                            <p>Preencha os dados do cliente.</p>
+                        </div>
+                    </div>
+
+                    <form id="formulario-cliente">
+                        <input type="hidden" id="id-cliente">
+
+                        <div class="grade-formulario-clientes">
+                            <div class="campo-cliente">
+                                <label for="nome-completo">Nome completo</label>
+                                <input type="text" id="nome-completo" name="nome_completo" maxlength="150" autocomplete="name" required>
+                            </div>
+
+                            <div class="campo-cliente">
+                                <label for="documento">CPF ou documento</label>
+                                <input type="text" id="documento" name="documento" maxlength="20" autocomplete="off" required>
+                            </div>
+
+                            <div class="campo-cliente">
+                                <label for="email-cliente">E-mail</label>
+                                <input type="email" id="email-cliente" name="email" maxlength="150" autocomplete="email">
+                            </div>
+                        </div>
+
+                        <p id="mensagem-formulario-cliente" class="mensagem-formulario-cliente" role="alert" aria-live="polite"></p>
+
+                        <div class="acoes-formulario-cliente">
+                            <button type="button" id="botao-cancelar-cliente" class="botao-secundario">Cancelar</button>
+                            <button type="submit" class="botao-primario" id="botao-salvar-cliente">Salvar cliente</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="painel-tabela painel-clientes" aria-label="Lista de clientes">
+                    <div class="barra-pesquisa">
+                        <label for="pesquisa-clientes">Pesquisar clientes</label>
+                        <input type="search" id="pesquisa-clientes" name="pesquisa" placeholder="Digite o nome, documento ou e-mail">
+                    </div>
+
+                    <p id="mensagem-lista-clientes" class="mensagem-lista-clientes" role="status" aria-live="polite"></p>
+
+                    <div class="tabela-responsiva">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Nome completo</th>
+                                    <th scope="col">Documento</th>
+                                    <th scope="col">E-mail</th>
+                                    <th scope="col">Situação</th>
+                                    <th scope="col">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-clientes">
+                                <tr>
+                                    <td colspan="5" class="mensagem-vazia">
+                                        <span class="mensagem-vazia-icone" aria-hidden="true">♙</span>
+                                        <strong>Carregando clientes...</strong>
+                                        <span>Aguarde enquanto consultamos os cadastros.</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </section>
+
+            <footer class="rodape-conteudo">
+                <p>Estacionamento &copy; {{ ano_atual if ano_atual is defined else "2026" }}</p>
+                <p>Painel administrativo</p>
+            </footer>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f7f0ee">
+    <title>Dashboard do Administrador | Estacionamento</title>
+    <link rel="stylesheet" href="/static/css/dashboard_admin.css">
+</head>
+<body>
+    <div class="pagina">
+        <aside class="menu-lateral">
+            <div class="identidade">
+                <div class="identidade-icone">E</div>
+                <div class="identidade-texto">
+                    <h1>Estacionamento</h1>
+                    <p>Painel administrativo</p>
+                </div>
+            </div>
+            <nav class="navegacao" aria-label="Menu principal">
+                <a href="/dashboard-admin" class="item-menu ativo" aria-current="page">
+                    <span class="icone-menu" aria-hidden="true">▦</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/clientes" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">♙</span>
+                    <span>Clientes</span>
+                </a>
+                <a href="/veiculos" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">🚗</span>
+                    <span>Veículos</span>
+                </a>
+                <a href="/vagas" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">▤</span>
+                    <span>Vagas</span>
+                </a>
+                <a href="/movimentacoes" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">⇄</span>
+                    <span>Movimentações</span>
+                </a>
+                <a href="/usuarios" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">♧</span>
+                    <span>Usuários</span>
+                </a>
+                <a href="/tarifas" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">R$</span>
+                    <span>Tarifas</span>
+                </a>
+                <a href="/faturamento" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">▥</span>
+                    <span>Faturamento</span>
+                </a>
+            </nav>
+            <div class="rodape-menu">
+                <div class="usuario-resumo">
+                    <div class="usuario-avatar" aria-hidden="true">A</div>
+                    <div class="usuario-informacoes">
+                        <strong>{{ usuario.nome if usuario is defined else "Administrador" }}</strong>
+                        <span>Administrador</span>
+                    </div>
+                </div>
+                <a href="/logout" class="botao-sair">Sair da conta</a>
+            </div>
+        </aside>
+
+        <main class="conteudo-principal">
+            <header class="cabecalho">
+                <div class="cabecalho-titulo">
+                    <p class="texto-superior">ÁREA ADMINISTRATIVA</p>
+                    <h2>Dashboard</h2>
+                    <p class="descricao-cabecalho">Acompanhe a situação geral do estacionamento.</p>
+                </div>
+                <div class="cabecalho-acoes">
+                    <span class="etiqueta-perfil">Administrador</span>
+                </div>
+            </header>
+
+            <section class="secao-indicadores" aria-labelledby="titulo-indicadores">
+                <div class="titulo-secao">
+                    <div>
+                        <h3 id="titulo-indicadores">Visão geral</h3>
+                        <p>Resumo atual do estacionamento.</p>
+                    </div>
+                </div>
+
+                <div class="grade-indicadores">
+                    <article class="cartao-indicador indicador-roxo">
+                        <div class="indicador-cabecalho">
+                            <span class="indicador-icone" aria-hidden="true">🚗</span>
+                            <span class="indicador-legenda">Em andamento</span>
+                        </div>
+                        <p class="indicador-valor">{{ total_veiculos_estacionados if total_veiculos_estacionados is defined else "—" }}</p>
+                        <h4>Veículos estacionados</h4>
+                    </article>
+
+                    <article class="cartao-indicador indicador-azul">
+                        <div class="indicador-cabecalho">
+                            <span class="indicador-icone" aria-hidden="true">▤</span>
+                            <span class="indicador-legenda">Disponibilidade</span>
+                        </div>
+                        <p class="indicador-valor">{{ total_vagas_disponiveis if total_vagas_disponiveis is defined else "—" }}</p>
+                        <h4>Vagas disponíveis</h4>
+                    </article>
+
+                    <article class="cartao-indicador indicador-rosa">
+                        <div class="indicador-cabecalho">
+                            <span class="indicador-icone" aria-hidden="true">↘</span>
+                            <span class="indicador-legenda">Hoje</span>
+                        </div>
+                        <p class="indicador-valor">{{ total_entradas_hoje if total_entradas_hoje is defined else "—" }}</p>
+                        <h4>Entradas de hoje</h4>
+                    </article>
+
+                    <article class="cartao-indicador indicador-lilas">
+                        <div class="indicador-cabecalho">
+                            <span class="indicador-icone" aria-hidden="true">♙</span>
+                            <span class="indicador-legenda">Cadastros</span>
+                        </div>
+                        <p class="indicador-valor">{{ total_clientes if total_clientes is defined else "—" }}</p>
+                        <h4>Clientes cadastrados</h4>
+                    </article>
+                </div>
+            </section>
+
+            <section class="secao-movimentacoes" aria-labelledby="titulo-movimentacoes">
+                <div class="titulo-secao titulo-movimentacoes">
+                    <div>
+                        <h3 id="titulo-movimentacoes">Movimentações de hoje</h3>
+                        <p>Entradas e saídas registradas na data atual.</p>
+                    </div>
+                    <a href="/movimentacoes" class="botao-secundario">Ver movimentações</a>
+                </div>
+
+                <div class="painel-tabela">
+                    <div class="barra-pesquisa">
+                        <label for="pesquisa-movimentacao">Pesquisar movimentação</label>
+                        <input
+                            type="search"
+                            id="pesquisa-movimentacao"
+                            name="pesquisa"
+                            placeholder="Digite a placa ou o nome do cliente"
+                        >
+                    </div>
+
+                    <div class="tabela-responsiva">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Veículo</th>
+                                    <th scope="col">Placa</th>
+                                    <th scope="col">Cliente</th>
+                                    <th scope="col">Vaga</th>
+                                    <th scope="col">Entrada</th>
+                                    <th scope="col">Saída</th>
+                                    <th scope="col">Situação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if movimentacoes is defined and movimentacoes %}
+                                    {% for movimentacao in movimentacoes %}
+                                    <tr>
+                                        <td>{{ movimentacao.modelo_veiculo or "—" }}</td>
+                                        <td>{{ movimentacao.placa or "—" }}</td>
+                                        <td>{{ movimentacao.nome_cliente or "—" }}</td>
+                                        <td>{{ movimentacao.codigo_vaga or "—" }}</td>
+                                        <td>{{ movimentacao.data_hora_entrada or "—" }}</td>
+                                        <td>{{ movimentacao.data_hora_saida or "—" }}</td>
+                                        <td>
+                                            {% if movimentacao.data_hora_saida %}
+                                                <span class="etiqueta-situacao encerrada">Encerrada</span>
+                                            {% else %}
+                                                <span class="etiqueta-situacao aberta">Em aberto</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" class="mensagem-vazia">
+                                            <span class="mensagem-vazia-icone" aria-hidden="true">▤</span>
+                                            <strong>Nenhuma movimentação para exibir</strong>
+                                            <span>As movimentações de hoje aparecerão aqui.</span>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="rodape-conteudo">
+                <p>Estacionamento &copy; {{ ano_atual if ano_atual is defined else "2026" }}</p>
+                <p>Painel administrativo</p>
+            </footer>
+        </main>
+    </div>
+</body>
+</html>
