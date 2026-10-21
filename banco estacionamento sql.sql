@@ -746,8 +746,94 @@ VALUES (
     'OPERADOR',
     1
 );
+INSERT INTO marcas_veiculo (nome, ativo) VALUES
+('Toyota', TRUE),
+('Honda', TRUE),
+('Volkswagen', TRUE),
+('Chevrolet', TRUE),
+('Fiat', TRUE),
+('Ford', TRUE),
+('Hyundai', TRUE),
+('Nissan', TRUE),
+('Renault', TRUE),
+('Jeep', TRUE),
+('BMW', TRUE),
+('Mercedes-Benz', TRUE),
+('Audi', TRUE),
+('BYD', TRUE),
+('Mitsubishi', TRUE);
 
 
+INSERT INTO modelos_veiculo (id_marca, nome, ativo)
+SELECT id_marca, 'Corolla', TRUE FROM marcas_veiculo WHERE nome = 'Toyota'
+UNION ALL
+SELECT id_marca, 'Hilux', TRUE FROM marcas_veiculo WHERE nome = 'Toyota'
+UNION ALL
+SELECT id_marca, 'Yaris', TRUE FROM marcas_veiculo WHERE nome = 'Toyota'
+UNION ALL
+SELECT id_marca, 'Civic', TRUE FROM marcas_veiculo WHERE nome = 'Honda'
+UNION ALL
+SELECT id_marca, 'City', TRUE FROM marcas_veiculo WHERE nome = 'Honda'
+UNION ALL
+SELECT id_marca, 'HR-V', TRUE FROM marcas_veiculo WHERE nome = 'Honda'
+UNION ALL
+SELECT id_marca, 'Polo', TRUE FROM marcas_veiculo WHERE nome = 'Volkswagen'
+UNION ALL
+SELECT id_marca, 'T-Cross', TRUE FROM marcas_veiculo WHERE nome = 'Volkswagen'
+UNION ALL
+SELECT id_marca, 'Nivus', TRUE FROM marcas_veiculo WHERE nome = 'Volkswagen'
+UNION ALL
+SELECT id_marca, 'Onix', TRUE FROM marcas_veiculo WHERE nome = 'Chevrolet'
+UNION ALL
+SELECT id_marca, 'Tracker', TRUE FROM marcas_veiculo WHERE nome = 'Chevrolet'
+UNION ALL
+SELECT id_marca, 'Montana', TRUE FROM marcas_veiculo WHERE nome = 'Chevrolet'
+UNION ALL
+SELECT id_marca, 'Argo', TRUE FROM marcas_veiculo WHERE nome = 'Fiat'
+UNION ALL
+SELECT id_marca, 'Cronos', TRUE FROM marcas_veiculo WHERE nome = 'Fiat'
+UNION ALL
+SELECT id_marca, 'Toro', TRUE FROM marcas_veiculo WHERE nome = 'Fiat'
+UNION ALL
+SELECT id_marca, 'Ranger', TRUE FROM marcas_veiculo WHERE nome = 'Ford'
+UNION ALL
+SELECT id_marca, 'Territory', TRUE FROM marcas_veiculo WHERE nome = 'Ford'
+UNION ALL
+SELECT id_marca, 'Bronco Sport', TRUE FROM marcas_veiculo WHERE nome = 'Ford'
+UNION ALL
+SELECT id_marca, 'HB20', TRUE FROM marcas_veiculo WHERE nome = 'Hyundai'
+UNION ALL
+SELECT id_marca, 'Creta', TRUE FROM marcas_veiculo WHERE nome = 'Hyundai'
+UNION ALL
+SELECT id_marca, 'Kicks', TRUE FROM marcas_veiculo WHERE nome = 'Nissan'
+UNION ALL
+SELECT id_marca, 'Versa', TRUE FROM marcas_veiculo WHERE nome = 'Nissan'
+UNION ALL
+SELECT id_marca, 'Kwid', TRUE FROM marcas_veiculo WHERE nome = 'Renault'
+UNION ALL
+SELECT id_marca, 'Duster', TRUE FROM marcas_veiculo WHERE nome = 'Renault'
+UNION ALL
+SELECT id_marca, 'Renegade', TRUE FROM marcas_veiculo WHERE nome = 'Jeep'
+UNION ALL
+SELECT id_marca, 'Compass', TRUE FROM marcas_veiculo WHERE nome = 'Jeep'
+UNION ALL
+SELECT id_marca, '320i', TRUE FROM marcas_veiculo WHERE nome = 'BMW'
+UNION ALL
+SELECT id_marca, 'X1', TRUE FROM marcas_veiculo WHERE nome = 'BMW'
+UNION ALL
+SELECT id_marca, 'C-Class', TRUE FROM marcas_veiculo WHERE nome = 'Mercedes-Benz'
+UNION ALL
+SELECT id_marca, 'GLA', TRUE FROM marcas_veiculo WHERE nome = 'Mercedes-Benz'
+UNION ALL
+SELECT id_marca, 'A3', TRUE FROM marcas_veiculo WHERE nome = 'Audi'
+UNION ALL
+SELECT id_marca, 'Q3', TRUE FROM marcas_veiculo WHERE nome = 'Audi'
+UNION ALL
+SELECT id_marca, 'Dolphin', TRUE FROM marcas_veiculo WHERE nome = 'BYD'
+UNION ALL
+SELECT id_marca, 'Song Plus', TRUE FROM marcas_veiculo WHERE nome = 'BYD'
+UNION ALL
+SELECT id_marca, 'L200 Triton', TRUE FROM marcas_veiculo WHERE nome = 'Mitsubishi';
 SELECT id_usuario, nome, email,senha_hash, perfil, ativo
 FROM users
 WHERE email IN (
@@ -755,6 +841,6 @@ WHERE email IN (
     'operador@estacionamento.com'
 );
 
-
+select * from veiculos;
 
 SELECT VERSION();

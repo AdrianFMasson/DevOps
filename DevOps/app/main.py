@@ -1,10 +1,8 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
-
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-
 from db.db import database
 from routes.auth_rota import auth_rota
 from routes.usuarios_rota import usuarios_rota
@@ -24,7 +22,6 @@ DIRETORIO_TEMPLATES = DIRETORIO_APP / "templates"
 
 templates = Jinja2Templates(directory=str(DIRETORIO_TEMPLATES))
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
@@ -32,7 +29,6 @@ async def lifespan(app: FastAPI):
         yield
     finally:
         database.stop_tunnel()
-
 
 app = FastAPI(
     title="Sistema de Estacionamento",
@@ -59,7 +55,6 @@ app.include_router(vagas_mensalistas_rota)
 app.include_router(tarifas_rota)
 app.include_router(movimentacoes_rota)
 
-
 @app.get("/", include_in_schema=False)
 def inicio(request: Request):
     return templates.TemplateResponse(
@@ -67,7 +62,6 @@ def inicio(request: Request):
         name="login.html",
         context={}
     )
-
 
 @app.get("/dashboard-gestor", include_in_schema=False)
 def dashboard_gestor(request: Request):
@@ -77,7 +71,6 @@ def dashboard_gestor(request: Request):
         context={}
     )
 
-
 @app.get("/clientes", include_in_schema=False)
 def pagina_clientes(request: Request):
     return templates.TemplateResponse(
@@ -86,11 +79,18 @@ def pagina_clientes(request: Request):
         context={}
     )
 
-
 @app.get("/veiculos", include_in_schema=False)
 def pagina_veiculos(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="veiculos.html",
+        context={}
+    )
+
+@app.get("/vagas", include_in_schema=False)
+def pagina_vagas(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="vagas.html",
         context={}
     )
