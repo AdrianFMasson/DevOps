@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movimentações | Estacionamento</title>
+    <link rel="stylesheet" href="/static/css/movimentacoes.css">
+</head>
+<body>
+    <div class="pagina">
+        <aside class="menu-lateral">
+            <div class="identidade">
+                <span class="identidade-icone">E</span>
+                <div>
+                    <strong>Estacionamento</strong>
+                    <small>Painel administrativo</small>
+                </div>
+            </div>
+
+            <nav class="menu">
+                <span class="menu-titulo">MENU PRINCIPAL</span>
+                <a href="/dashboard-admin" class="menu-link"><span>▦</span> Dashboard</a>
+                <a href="/vagas" class="menu-link"><span>▤</span> Vagas</a>
+                <a href="/movimentacoes" class="menu-link"><span>⇄</span> Movimentações</a>
+
+                <span class="menu-titulo">GERENCIAMENTO</span>
+                <a href="/clientes" class="menu-link"><span>♙</span> Clientes</a>
+                <a href="/veiculos" class="menu-link"><span>▣</span> Veículos</a>
+                <a href="/usuarios" class="menu-link ativo"><span>♟</span> Usuários</a>
+            </nav>
+
+            <div class="rodape-menu">
+                <div class="usuario-resumo">
+                    <span class="usuario-avatar">A</span>
+                    <div class="usuario-informacoes">
+                        <strong>Administrador</strong>
+                        <small>Administrador</small>
+                    </div>
+                </div>
+                <a href="/" class="botao-sair">Sair da conta</a>
+            </div>
+        </aside>
+
+        <main class="conteudo-principal">
+            <header class="cabecalho">
+                <div>
+                    <span class="texto-superior">ÁREA ADMINISTRATIVA</span>
+                    <h1>Movimentações</h1>
+                    <p class="descricao-cabecalho">
+                        Consulte e gerencie as entradas e saídas dos veículos.
+                    </p>
+                </div>
+
+                <div class="cabecalho-acoes">
+                    <button type="button" class="botao-secundario" id="alternarTema">
+                        ☼ Modo claro
+                    </button>
+                    <span class="etiqueta-perfil">Administrador</span>
+                </div>
+            </header>
+
+            <section class="secao-movimentacoes">
+                <div class="cabecalho-listagem">
+                    <div>
+                        <h2>Gerenciamento de movimentações</h2>
+                        <p>Registre entradas, acompanhe veículos e consulte saídas.</p>
+                    </div>
+
+                    <button type="button" class="botao-primario" id="abrirModalEntrada">
+                        + Nova entrada
+                    </button>
+                </div>
+
+                <div class="grade-indicadores">
+                    <article class="cartao-indicador">
+                        <div class="indicador-cabecalho">
+                            <span class="indicador-legenda">Total de movimentações</span>
+                            <span class="indicador-icone roxo">▤</span>
+                        </div>
+                        <strong class="indicador-valor" id="totalMovimentacoes">0</strong>
+                        <small>Todos os registros</small>
+                    </article>
+
+                    <article class="cartao-indicador">
+                        <div class="indicador-cabecalho">
+                            <span class="indicador-legenda">Veículos estacionados</span>
+                            <span class="indicador-icone verde">✓</span>
+                        </div>
+                        <strong class="indicador-valor" id="movimentacoesAbertas">0</strong>
+                        <small>Movimentações em aberto</small>
+                    </article>
+
+                    <article class="cartao-indicador">
+                        <div class="indicador-cabecalho">
+                            <span class="indicador-legenda">Movimentações encerradas</span>
+                            <span class="indicador-icone azul">↗</span>
+                        </div>
+                        <strong class="indicador-valor" id="movimentacoesFechadas">0</strong>
+                        <small>Saídas registradas</small>
+                    </article>
+
+                    <article class="cartao-indicador">
+                        <div class="indicador-cabecalho">
+                            <span class="indicador-legenda">Receita registrada</span>
+                            <span class="indicador-icone rosa">R$</span>
+                        </div>
+                        <strong class="indicador-valor" id="receitaMovimentacoes">R$ 0,00</strong>
+                        <small>Valores das movimentações encerradas</small>
+                    </article>
+                </div>
+
+                <div class="painel-tabela">
+                    <div class="barra-filtros">
+                        <div class="titulo-pesquisa">
+                            <strong>Pesquisar movimentações</strong>
+                        </div>
+
+                        <div class="barra-pesquisa">
+                            <span>⌕</span>
+                            <input
+                                type="search"
+                                id="buscaMovimentacao"
+                                placeholder="Digite o ID, veículo, vaga ou modalidade"
+                            >
+                        </div>
+
+                        <select id="filtroStatus" aria-label="Filtrar por status">
+                            <option value="">Todos os status</option>
+                            <option value="aberta">Em aberto</option>
+                            <option value="fechada">Encerradas</option>
+                        </select>
+
+                        <button
+                            type="button"
+                            class="botao-icone"
+                            id="atualizarMovimentacoes"
+                            title="Atualizar movimentações"
+                            aria-label="Atualizar movimentações"
+                        >↻</button>
+                    </div>
+
+                    <div class="tabela-responsiva">
+                        <table id="tabelaMovimentacoes">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Veículo</th>
+                                    <th>Vaga</th>
+                                    <th>Modalidade</th>
+                                    <th>Entrada</th>
+                                    <th>Saída</th>
+                                    <th>Valor total</th>
+                                    <th class="coluna-acoes">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="8">Carregando movimentações...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="resumo-tabela">
+                        <span id="quantidadeMovimentacoes">Carregando registros...</span>
+                        <span>Dados do estacionamento</span>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="rodape-pagina">
+                <span>Estacionamento © 2026</span>
+                <span>Painel administrativo</span>
+            </footer>
+        </main>
+    </div>
+
+    <div class="fundo-modal" id="modalEntrada" aria-hidden="true">
+        <section class="modal">
+            <header class="modal-cabecalho">
+                <div>
+                    <span class="texto-superior">NOVA MOVIMENTAÇÃO</span>
+                    <h2>Registrar entrada</h2>
+                    <p>Informe os dados do veículo para registrar sua entrada.</p>
+                </div>
+                <button
+                    type="button"
+                    class="fechar-modal"
+                    data-fechar="modalEntrada"
+                    aria-label="Fechar modal"
+                >&times;</button>
+            </header>
+
+            <form class="formulario-modal" id="formEntrada">
+                <div class="campo">
+                    <label for="entradaVeiculo">ID do veículo</label>
+                    <input type="number" id="entradaVeiculo" min="1" required>
+                </div>
+
+                <div class="campo">
+                    <label for="entradaVaga">ID da vaga</label>
+                    <input type="number" id="entradaVaga" min="1" required>
+                </div>
+
+                <div class="campo campo-completo">
+                    <label for="entradaUsuario">ID do usuário responsável</label>
+                    <input type="number" id="entradaUsuario" min="1" required>
+                </div>
+
+                <div class="campo">
+                    <label for="entradaModalidade">Modalidade</label>
+                    <select id="entradaModalidade" required>
+                        <option value="">Selecione</option>
+                        <option value="AVULSO">Avulso</option>
+                        <option value="MENSALISTA">Mensalista</option>
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="entradaTarifa">ID da tarifa (opcional)</label>
+                    <input type="number" id="entradaTarifa" min="1">
+                </div>
+
+                <p class="aviso-formulario">
+                    Os IDs informados devem existir no cadastro do sistema.
+                </p>
+
+                <div class="acoes-modal">
+                    <button
+                        type="button"
+                        class="botao-secundario"
+                        data-fechar="modalEntrada"
+                    >Cancelar</button>
+                    <button type="submit" class="botao-primario">
+                        Registrar entrada
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <div class="fundo-modal" id="modalSaida" aria-hidden="true">
+        <section class="modal modal-compacto">
+            <header class="modal-cabecalho">
+                <div>
+                    <span class="texto-superior">ENCERRAR MOVIMENTAÇÃO</span>
+                    <h2>Registrar saída</h2>
+                    <p>Informe o usuário responsável pela saída do veículo.</p>
+                </div>
+                <button
+                    type="button"
+                    class="fechar-modal"
+                    data-fechar="modalSaida"
+                    aria-label="Fechar modal"
+                >&times;</button>
+            </header>
+
+            <form class="formulario-modal" id="formSaida">
+                <input type="hidden" id="saidaMovimentacao">
+
+                <div class="campo campo-completo">
+                    <label for="saidaUsuario">ID do usuário responsável</label>
+                    <input type="number" id="saidaUsuario" min="1" required>
+                </div>
+
+                <div class="acoes-modal">
+                    <button
+                        type="button"
+                        class="botao-secundario"
+                        data-fechar="modalSaida"
+                    >Cancelar</button>
+                    <button type="submit" class="botao-primario">
+                        Confirmar saída
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <div class="notificacao" id="notificacao" role="status"></div>
+
+    <script src="/static/js/movimentacoes.js"></script>
+
+    <script>
+        const elementoModalEntrada = document.getElementById("modalEntrada");
+        const elementoModalSaida = document.getElementById("modalSaida");
+
+        function abrirModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+
+            modal.classList.add("aberto");
+            modal.setAttribute("aria-hidden", "false");
+            document.body.classList.add("modal-aberto");
+        }
+
+        function fecharModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+
+            modal.classList.remove("aberto");
+            modal.setAttribute("aria-hidden", "true");
+
+            if (!document.querySelector(".fundo-modal.aberto")) {
+                document.body.classList.remove("modal-aberto");
+            }
+        }
+
+        document.getElementById("abrirModalEntrada").addEventListener("click", () => {
+            abrirModal("modalEntrada");
+        });
+
+        document.getElementById("atualizarMovimentacoes").addEventListener("click", () => {
+            window.carregarMovimentacoes?.();
+        });
+
+        document.querySelectorAll("[data-fechar]").forEach(botao => {
+            botao.addEventListener("click", () => {
+                fecharModal(botao.dataset.fechar);
+            });
+        });
+
+        document.querySelectorAll(".fundo-modal").forEach(modal => {
+            modal.addEventListener("click", evento => {
+                if (evento.target === modal) fecharModal(modal.id);
+            });
+        });
+
+        document.addEventListener("keydown", evento => {
+            if (evento.key === "Escape") {
+                document.querySelectorAll(".fundo-modal.aberto").forEach(modal => {
+                    fecharModal(modal.id);
+                });
+            }
+        });
+
+        document.getElementById("formEntrada").addEventListener("submit", async evento => {
+            evento.preventDefault();
+
+            const dados = {
+                id_veiculo: Number(document.getElementById("entradaVeiculo").value),
+                id_vaga: Number(document.getElementById("entradaVaga").value),
+                id_usuario_entrada: Number(document.getElementById("entradaUsuario").value),
+                modalidade: document.getElementById("entradaModalidade").value
+            };
+
+            const tarifa = document.getElementById("entradaTarifa").value;
+            if (tarifa) dados.id_tarifa = Number(tarifa);
+
+            if (typeof window.registrarEntrada !== "function") {
+                alert("O JavaScript de movimentações não foi carregado.");
+                return;
+            }
+
+            try {
+                await window.registrarEntrada(dados);
+                evento.target.reset();
+                fecharModal("modalEntrada");
+            } catch (erro) {
+                console.error(erro);
+            }
+        });
+
+        document.getElementById("formSaida").addEventListener("submit", async evento => {
+            evento.preventDefault();
+
+            const id = Number(document.getElementById("saidaMovimentacao").value);
+            const usuario = Number(document.getElementById("saidaUsuario").value);
+
+            if (!id || !usuario) return;
+
+            try {
+                await window.registrarSaida(id, {
+                    id_usuario_saida: usuario
+                });
+
+                evento.target.reset();
+                fecharModal("modalSaida");
+            } catch (erro) {
+                console.error(erro);
+            }
+        });
+
+        document.getElementById("alternarTema").addEventListener("click", evento => {
+            document.body.classList.toggle("tema-claro");
+            evento.currentTarget.textContent =
+                document.body.classList.contains("tema-claro")
+                    ? "☾ Modo escuro"
+                    : "☼ Modo claro";
+        });
+
+        window.abrirModalSaida = id => {
+            document.getElementById("saidaMovimentacao").value = id;
+            abrirModal("modalSaida");
+        };
+
+        window.mostrarNotificacao = (mensagem, tipo = "") => {
+            const notificacao = document.getElementById("notificacao");
+            notificacao.textContent = mensagem;
+            notificacao.className = `notificacao visivel ${tipo}`;
+
+            setTimeout(() => notificacao.classList.remove("visivel"), 3500);
+        };
+    </script>
+</body>
+</html>

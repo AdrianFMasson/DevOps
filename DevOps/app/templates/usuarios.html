@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuários | Estacionamento</title>
+    <link rel="stylesheet" href="/static/css/usuarios.css">
+    <script src="/static/js/usuarios.js" defer></script>
+</head>
+<body>
+    <aside class="barra-lateral">
+        <div class="marca">
+            <div class="marca-icone">E</div>
+            <div>
+                <h2>Estacionamento</h2>
+                <span>Painel administrativo</span>
+            </div>
+        </div>
+
+        <nav class="menu">
+            <span class="menu-titulo">MENU PRINCIPAL</span>
+            <a href="/dashboard-admin" class="menu-link"><span>▦</span> Dashboard</a>
+            <a href="/vagas" class="menu-link"><span>▤</span> Vagas</a>
+            <a href="/movimentacoes" class="menu-link"><span>⇄</span> Movimentações</a>
+
+            <span class="menu-titulo">GERENCIAMENTO</span>
+            <a href="/clientes" class="menu-link"><span>♙</span> Clientes</a>
+            <a href="/veiculos" class="menu-link"><span>▣</span> Veículos</a>
+            <a href="/usuarios" class="menu-link ativo"><span>♟</span> Usuários</a>
+        </nav>
+
+        <div class="lateral-rodape">
+            <div class="avatar">AD</div>
+            <div class="usuario-lateral">
+                <strong>Administrador</strong>
+                <span>Gestão do sistema</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="conteudo">
+        <header class="cabecalho">
+            <div>
+                <span class="caminho">Gerenciamento / Usuários</span>
+                <h1>Usuários</h1>
+                <p>Consulte, cadastre e gerencie os acessos dos operadores.</p>
+            </div>
+            <button class="botao botao-principal" id="botaoNovo">＋ Novo usuário</button>
+        </header>
+
+        <section class="indicadores">
+            <article class="cartao-indicador">
+                <div class="indicador-icone roxo">♟</div>
+                <div>
+                    <span>Total de operadores</span>
+                    <strong id="totalUsuarios">—</strong>
+                    <small>Usuários cadastrados</small>
+                </div>
+            </article>
+
+            <article class="cartao-indicador">
+                <div class="indicador-icone verde">✓</div>
+                <div>
+                    <span>Ativos</span>
+                    <strong id="usuariosAtivos">—</strong>
+                    <small>Com acesso habilitado</small>
+                </div>
+            </article>
+
+            <article class="cartao-indicador">
+                <div class="indicador-icone vermelho">◷</div>
+                <div>
+                    <span>Inativos</span>
+                    <strong id="usuariosInativos">—</strong>
+                    <small>Com acesso desabilitado</small>
+                </div>
+            </article>
+        </section>
+
+        <section class="painel">
+            <div class="painel-cabecalho">
+                <div>
+                    <h2>Lista de operadores</h2>
+                    <p>Gerencie os dados e o status de acesso dos operadores.</p>
+                </div>
+                <button class="botao botao-secundario" id="botaoAtualizar">↻ Atualizar</button>
+            </div>
+
+            <div class="filtros">
+                <div class="campo-pesquisa">
+                    <span>⌕</span>
+                    <input
+                        type="search"
+                        id="pesquisaUsuarios"
+                        placeholder="Pesquisar por nome ou e-mail..."
+                        aria-label="Pesquisar usuários"
+                    >
+                </div>
+
+                <select id="filtroStatus" aria-label="Filtrar por status">
+                    <option value="todos">Todos os status</option>
+                    <option value="ativo">Ativos</option>
+                    <option value="inativo">Inativos</option>
+                </select>
+            </div>
+
+            <div class="tabela-contorno">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>USUÁRIO</th>
+                            <th>E-MAIL</th>
+                            <th>PERFIL</th>
+                            <th>STATUS</th>
+                            <th class="coluna-acoes">AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaUsuarios">
+                        <tr><td colspan="5" class="estado-tabela">Carregando usuários...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="painel-rodape">
+                <span id="totalExibido">Carregando registros...</span>
+            </div>
+        </section>
+
+        <div class="mensagem" id="mensagem" role="status" aria-live="polite"></div>
+    </main>
+
+    <div class="modal-fundo" id="modalUsuario" aria-hidden="true">
+        <section class="modal" role="dialog" aria-modal="true" aria-labelledby="tituloModal">
+            <div class="modal-cabecalho">
+                <div>
+                    <span class="caminho">GERENCIAMENTO DE ACESSO</span>
+                    <h2 id="tituloModal">Novo usuário</h2>
+                    <p id="descricaoModal">Preencha os dados para cadastrar um operador.</p>
+                </div>
+                <button type="button" class="botao-fechar" id="botaoFechar" aria-label="Fechar">×</button>
+            </div>
+
+            <form id="formUsuario">
+                <input type="hidden" id="idUsuario">
+
+                <label for="nomeUsuario">Nome completo</label>
+                <input id="nomeUsuario" type="text" maxlength="120" required placeholder="Digite o nome completo">
+
+                <label for="emailUsuario">E-mail</label>
+                <input id="emailUsuario" type="email" maxlength="254" required placeholder="operador@exemplo.com">
+
+                <label for="senhaUsuario" id="rotuloSenha">Senha inicial</label>
+                <input id="senhaUsuario" type="password" maxlength="255" autocomplete="new-password" placeholder="Digite a senha inicial">
+
+                <small class="ajuda-campo" id="ajudaSenha">
+                    Obrigatória para novos usuários. Em edição, deixe vazia para manter a senha atual.
+                </small>
+
+                <div class="modal-acoes">
+                    <button type="button" class="botao botao-secundario" id="botaoCancelar">Cancelar</button>
+                    <button type="submit" class="botao botao-principal" id="botaoSalvar">Salvar usuário</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</body>
+</html>

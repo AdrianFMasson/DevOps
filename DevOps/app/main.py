@@ -94,3 +94,20 @@ def pagina_vagas(request: Request):
         name="vagas.html",
         context={}
     )
+
+@app.get("/movimentacoes", include_in_schema=False)
+def pagina_movimentacoes(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="movimentacoes.html",
+        context={}
+    )
+
+
+@app.get("/usuarios", include_in_schema=False)
+def pagina_usuarios(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="usuarios.html",
+        context={}
+    )

@@ -1,12 +1,11 @@
-
 from typing import Optional
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from sqlmodel import Session
 
 from db.db import database
-from entities.models import PerfilUsuario, User
+from entities.models import PerfilUsuario
 from controller.UsuariosController import (
     listar_usuarios,
     buscar_usuario,
@@ -17,7 +16,7 @@ from controller.UsuariosController import (
 
 usuarios_rota = APIRouter(
     prefix="/api/usuarios",
-    tags=["Usuários"]
+    tags=["Usuários"],
 )
 
 
@@ -49,22 +48,32 @@ class UsuarioResposta(BaseModel):
 @usuarios_rota.get(
     "",
     response_model=list[UsuarioResposta],
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
 def obter_usuarios(
-    db: Session = Depends(database.get_db)
+    perfil: Optional[PerfilUsuario] = None,
+    db: Session = Depends(database.get_db),
 ):
-    return listar_usuarios(db)
+    usuarios = listar_usuarios(db)
+
+    if perfil is not None:
+        usuarios = [
+            usuario
+            for usuario in usuarios
+            if usuario.perfil == perfil
+        ]
+
+    return usuarios
 
 
 @usuarios_rota.get(
     "/{id_usuario}",
     response_model=UsuarioResposta,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
 def obter_usuario(
     id_usuario: int,
-    db: Session = Depends(database.get_db)
+    db: Session = Depends(database.get_db),
 ):
     return buscar_usuario(db, id_usuario)
 
@@ -72,56 +81,55 @@ def obter_usuario(
 @usuarios_rota.post(
     "",
     response_model=UsuarioResposta,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
 )
 def criar_usuario(
     dados: UsuarioCriacao,
-    db: Session = Depends(database.get_db)
+    db: Session = Depends(database.get_db),
 ):
     return cadastrar_usuario(
         db,
-        dados.model_dump()
+        dados.model_dump(),
     )
 
 
 @usuarios_rota.put(
     "/{id_usuario}",
     response_model=UsuarioResposta,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
 def editar_usuario(
     id_usuario: int,
     dados: UsuarioAtualizacao,
-    db: Session = Depends(database.get_db)
+    db: Session = Depends(database.get_db),
 ):
     dados_atualizados = dados.model_dump(exclude_unset=True)
 
     if not dados_atualizados:
-        from fastapi import HTTPException
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Informe ao menos um campo para atualizar."
+            detail="Informe ao menos um campo para atualizar.",
         )
 
     return atualizar_usuario(
         db,
         id_usuario,
-        dados_atualizados
+        dados_atualizados,
     )
 
 
 @usuarios_rota.delete(
     "/{id_usuario}",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
 def excluir_usuario(
     id_usuario: int,
-    db: Session = Depends(database.get_db)
+    db: Session = Depends(database.get_db),
 ):
     usuario = desativar_usuario(db, id_usuario)
 
     return {
         "mensagem": "Usuário desativado com sucesso.",
         "id_usuario": usuario.id_usuario,
-        "ativo": usuario.ativo
+        "ativo": usuario.ativo,
     }
