@@ -63,7 +63,7 @@ def inicio(request: Request):
         context={}
     )
 
-@app.get("/dashboard-gestor", include_in_schema=False)
+@app.get("/dashboard-admin", include_in_schema=False)
 def dashboard_gestor(request: Request):
     return templates.TemplateResponse(
         request=request,
