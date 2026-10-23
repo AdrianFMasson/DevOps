@@ -1,1135 +1,847 @@
-"use strict";
+/* =========================================================
+   SISTEMA DE ESTACIONAMENTO — VEÍCULOS
+   Arquivo: static/css/veiculos.css
+   ========================================================= */
 
-document.addEventListener("DOMContentLoaded", iniciarPaginaVeiculos);
+/* ---------- Configurações gerais ---------- */
 
-function iniciarPaginaVeiculos() {
-    const API_VEICULOS = "/api/veiculos";
-    const API_CLIENTES = "/api/clientes";
-    const API_MARCAS = "/api/marcas-veiculo";
-    const API_MODELOS = "/api/modelos-veiculo";
-    const API_VINCULOS = "/api/vagas-mensalistas";
-    const API_VAGAS = "/api/vagas";
+:root {
+    --cor-primaria: #2563eb;
+    --cor-primaria-hover: #1d4ed8;
+    --cor-fundo: #f1f5f9;
+    --cor-superficie: #ffffff;
+    --cor-texto: #1e293b;
+    --cor-texto-secundario: #64748b;
+    --cor-borda: #e2e8f0;
+    --cor-sucesso: #15803d;
+    --cor-erro: #b91c1c;
+    --cor-alerta: #b45309;
+    --raio-borda: 12px;
+    --sombra-padrao: 0 4px 16px rgba(15, 23, 42, 0.07);
+    --largura-menu: 250px;
+}
 
-    const elemento = id => document.getElementById(id);
+* {
+    box-sizing: border-box;
+}
 
-    const perfilUsuario = (
-        document.body.dataset.perfil || ""
-    ).trim().toUpperCase();
+html {
+    min-height: 100%;
+    scroll-behavior: smooth;
+}
 
-    const ehAdministrador = perfilUsuario === "ADMINISTRADOR";
-    const podeGerenciarVeiculos = ehAdministrador;
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+}
 
-    const painelFormulario = elemento("painel-formulario-veiculo");
-    const formulario = elemento("formulario-veiculo");
-    const lista = elemento("lista-veiculos");
-    const pesquisa = elemento("pesquisa-veiculos");
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
 
-    const campoId = elemento("id-veiculo");
-    const campoPlaca = elemento("placa-veiculo");
-    const campoCor = elemento("cor-veiculo");
-    const campoMarca = elemento("marca-veiculo");
-    const campoModelo = elemento("modelo-veiculo");
-    const campoCliente = elemento("cliente-veiculo");
-    const campoMensalista = elemento("mensalista-veiculo");
+button {
+    cursor: pointer;
+}
 
-    const tituloFormulario = elemento("titulo-formulario-veiculo");
-    const mensagemFormulario = elemento("mensagem-formulario-veiculo");
-    const mensagemLista = elemento("mensagem-lista-veiculos");
-    const botaoSalvar = elemento("botao-salvar-veiculo");
-    const botaoNovoVeiculo = elemento("botao-novo-veiculo");
-    const botaoCancelar = elemento("botao-cancelar-veiculo");
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
 
-    let veiculos = [];
-    let marcas = [];
-    let modelos = [];
-    let clientes = [];
-    let vinculosMensalistas = [];
-    let vagasMensalistas = [];
+a {
+    color: inherit;
+    text-decoration: none;
+}
 
-    let mensalistaOriginal = false;
-    let clienteOriginal = null;
+img {
+    max-width: 100%;
+}
 
-    // =====================================================
-    // PERMISSÕES DA INTERFACE
-    // =====================================================
+/* ---------- Estrutura principal ---------- */
 
-    if (!podeGerenciarVeiculos) {
-        if (botaoNovoVeiculo) {
-            botaoNovoVeiculo.hidden = true;
-        }
+.pagina {
+    min-height: 100vh;
+}
 
-        if (painelFormulario) {
-            painelFormulario.hidden = true;
-        }
+/* ---------- Menu lateral ---------- */
+
+.menu {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    width: var(--largura-menu);
+    height: 100vh;
+    padding: 24px 16px;
+    overflow-y: auto;
+    background: #0f172a;
+    color: #f8fafc;
+    box-shadow: 4px 0 18px rgba(15, 23, 42, 0.12);
+}
+
+.menu h1,
+.menu h2,
+.menu h3,
+.menu p {
+    margin-top: 0;
+}
+
+.menu h1,
+.menu h2 {
+    font-size: 20px;
+    line-height: 1.3;
+}
+
+.menu a {
+    color: inherit;
+}
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    margin: 4px 0;
+    padding: 11px 13px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    color: #cbd5e1;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.menu-link:hover {
+    background: rgba(148, 163, 184, 0.13);
+    color: #ffffff;
+}
+
+.menu-link.ativo,
+.menu-link.active,
+.menu-link[aria-current="page"] {
+    border-color: rgba(96, 165, 250, 0.25);
+    background: #1d4ed8;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.menu-link:focus-visible {
+    outline: 3px solid #93c5fd;
+    outline-offset: 2px;
+}
+
+/* Caso o HTML utilize uma área de identidade no menu */
+
+.identidade {
+    margin-bottom: 28px;
+    padding: 8px 10px 20px;
+    border-bottom: 1px solid rgba(203, 213, 225, 0.16);
+}
+
+.identidade h1,
+.identidade h2,
+.identidade h3 {
+    margin-bottom: 5px;
+    color: #ffffff;
+}
+
+.identidade p {
+    margin-bottom: 0;
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.navegacao {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* ---------- Conteúdo principal ---------- */
+
+.conteudo-principal {
+    min-width: 0;
+    min-height: 100vh;
+    margin-left: var(--largura-menu);
+    padding: 32px;
+}
+
+.conteudo-principal > header,
+.cabecalho-pagina {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 26px;
+}
+
+.conteudo-principal h1 {
+    margin: 0;
+    color: #0f172a;
+    font-size: clamp(24px, 3vw, 32px);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.conteudo-principal h2 {
+    color: #1e293b;
+}
+
+.conteudo-principal p {
+    color: var(--cor-texto-secundario);
+}
+
+/* ---------- Seção de veículos ---------- */
+
+.secao-veiculos {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    width: 100%;
+    min-width: 0;
+}
+
+.secao-veiculos h2 {
+    margin: 0 0 12px;
+    font-size: 20px;
+}
+
+.secao-veiculos h3 {
+    margin: 0 0 10px;
+    font-size: 17px;
+}
+
+/* ---------- Painéis e cartões ---------- */
+
+.painel,
+.painel-veiculos,
+.painel-tabela,
+.cartao,
+.card {
+    min-width: 0;
+    padding: 24px;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-borda);
+    background: var(--cor-superficie);
+    box-shadow: var(--sombra-padrao);
+}
+
+.painel-tabela {
+    overflow: hidden;
+}
+
+.painel-tabela h2 {
+    margin-top: 0;
+}
+
+/* ---------- Resumo / indicadores ---------- */
+
+.resumo-veiculos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.resumo-veiculos > div,
+.resumo-veiculos > article {
+    padding: 20px;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-borda);
+    background: var(--cor-superficie);
+    box-shadow: var(--sombra-padrao);
+}
+
+.resumo-veiculos p {
+    margin: 0 0 8px;
+    color: var(--cor-texto-secundario);
+    font-size: 14px;
+}
+
+.resumo-veiculos strong {
+    color: #0f172a;
+    font-size: 27px;
+}
+
+/* ---------- Botões ---------- */
+
+.botao,
+.botao-primario,
+.botao-secundario,
+.botao-perigo,
+.botao-editar,
+.botao-excluir,
+#botao-novo-veiculo,
+#botao-salvar-veiculo,
+#botao-cancelar-veiculo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 10px 16px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    font-weight: 600;
+    text-align: center;
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.15s ease;
+}
+
+.botao:hover,
+.botao-primario:hover,
+.botao-secundario:hover,
+.botao-perigo:hover,
+.botao-editar:hover,
+.botao-excluir:hover,
+#botao-novo-veiculo:hover,
+#botao-salvar-veiculo:hover,
+#botao-cancelar-veiculo:hover {
+    transform: translateY(-1px);
+}
+
+.botao-primario,
+#botao-novo-veiculo,
+#botao-salvar-veiculo {
+    background: var(--cor-primaria);
+    color: #ffffff;
+}
+
+.botao-primario:hover,
+#botao-novo-veiculo:hover,
+#botao-salvar-veiculo:hover {
+    background: var(--cor-primaria-hover);
+}
+
+.botao-secundario,
+#botao-cancelar-veiculo {
+    border-color: #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+}
+
+.botao-secundario:hover,
+#botao-cancelar-veiculo:hover {
+    background: #f8fafc;
+}
+
+.botao-perigo,
+.botao-excluir {
+    background: #dc2626;
+    color: #ffffff;
+}
+
+.botao-perigo:hover,
+.botao-excluir:hover {
+    background: #b91c1c;
+}
+
+.botao-editar {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.botao-editar:hover {
+    background: #bfdbfe;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.35);
+    outline-offset: 2px;
+}
+
+/* ---------- Pesquisa ---------- */
+
+.barra-pesquisa {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.barra-pesquisa input,
+#pesquisa-veiculos {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    padding: 11px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background: #ffffff;
+    color: var(--cor-texto);
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.barra-pesquisa input:focus,
+#pesquisa-veiculos:focus {
+    border-color: var(--cor-primaria);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.barra-pesquisa input::placeholder,
+#pesquisa-veiculos::placeholder {
+    color: #94a3b8;
+}
+
+/* ---------- Formulário de veículos ---------- */
+
+#painel-formulario-veiculo {
+    width: 100%;
+    margin-bottom: 22px;
+    padding: 24px;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-borda);
+    background: #ffffff;
+    box-shadow: var(--sombra-padrao);
+}
+
+/* Respeita o atributo hidden utilizado pelo JavaScript */
+#painel-formulario-veiculo[hidden] {
+    display: none !important;
+}
+
+#formulario-veiculo {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+#titulo-formulario-veiculo {
+    margin: 0;
+    color: #0f172a;
+    font-size: 21px;
+}
+
+.grade-formulario-veiculos,
+.grade-formulario-veiculo,
+.grade-formulario {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+#formulario-veiculo label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#formulario-veiculo input,
+#formulario-veiculo select,
+#formulario-veiculo textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1e293b;
+    font-weight: 400;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+#formulario-veiculo input:focus,
+#formulario-veiculo select:focus,
+#formulario-veiculo textarea:focus {
+    border-color: var(--cor-primaria);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+#formulario-veiculo input:disabled,
+#formulario-veiculo select:disabled,
+#formulario-veiculo textarea:disabled {
+    background: #f1f5f9;
+    cursor: not-allowed;
+}
+
+#formulario-veiculo input[type="checkbox"] {
+    width: 18px;
+    min-height: 18px;
+    height: 18px;
+    padding: 0;
+    accent-color: var(--cor-primaria);
+}
+
+#formulario-veiculo label:has(input[type="checkbox"]) {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+#formulario-veiculo .acoes-formulario,
+.acoes-formulario {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+/* ---------- Mensagens de estado ---------- */
+
+#mensagem-formulario-veiculo,
+#mensagem-lista-veiculos {
+    margin: 12px 0;
+    padding: 12px 14px;
+    border-radius: 8px;
+    overflow-wrap: anywhere;
+}
+
+#mensagem-formulario-veiculo:empty,
+#mensagem-lista-veiculos:empty {
+    display: none;
+}
+
+.mensagem-sucesso,
+.mensagem.sucesso {
+    border: 1px solid #bbf7d0;
+    background: #f0fdf4;
+    color: var(--cor-sucesso);
+}
+
+.mensagem-erro,
+.mensagem.erro {
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: var(--cor-erro);
+}
+
+.mensagem-alerta,
+.mensagem.alerta {
+    border: 1px solid #fde68a;
+    background: #fffbeb;
+    color: var(--cor-alerta);
+}
+
+/* ---------- Tabela ---------- */
+
+.tabela-responsiva {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--cor-borda);
+    border-radius: 10px;
+    background: #ffffff;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tabela-responsiva table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.tabela-responsiva thead {
+    background: #f8fafc;
+}
+
+.tabela-responsiva th {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--cor-borda);
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.tabela-responsiva td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #edf2f7;
+    color: #334155;
+    vertical-align: middle;
+}
+
+.tabela-responsiva tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.tabela-responsiva tbody tr:hover {
+    background: #f8fafc;
+}
+
+.tabela-responsiva td:first-child {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.tabela-responsiva td:last-child {
+    white-space: nowrap;
+}
+
+.tabela-responsiva td button {
+    margin: 2px 4px 2px 0;
+}
+
+#lista-veiculos tr td[colspan] {
+    padding: 28px 16px;
+    color: var(--cor-texto-secundario);
+    text-align: center;
+}
+
+/* ---------- Indicadores de situação ---------- */
+
+.status,
+.etiqueta,
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-ativo,
+.etiqueta-ativo {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-inativo,
+.etiqueta-inativo {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* ---------- Modais, caso utilizados ---------- */
+
+.fundo-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(3px);
+}
+
+.fundo-modal[hidden] {
+    display: none !important;
+}
+
+.conteudo-modal {
+    width: min(100%, 600px);
+    max-height: calc(100vh - 40px);
+    padding: 26px;
+    overflow-y: auto;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+}
+
+.conteudo-modal h2 {
+    margin-top: 0;
+}
+
+/* ---------- Rodapé ---------- */
+
+footer {
+    margin-top: 32px;
+    padding: 18px 0;
+    color: #64748b;
+    font-size: 13px;
+    text-align: center;
+}
+
+/* ---------- Telas médias ---------- */
+
+@media (max-width: 1100px) {
+    :root {
+        --largura-menu: 220px;
     }
 
-    // =====================================================
-    // REQUISIÇÕES À API
-    // =====================================================
-
-    async function requisicaoAPI(url, opcoes = {}) {
-        const resposta = await fetch(url, {
-            credentials: "same-origin",
-            ...opcoes,
-            headers: {
-                ...(opcoes.body
-                    ? { "Content-Type": "application/json" }
-                    : {}),
-                ...opcoes.headers
-            }
-        });
-
-        const texto = await resposta.text();
-        let dados = null;
-
-        if (texto) {
-            try {
-                dados = JSON.parse(texto);
-            } catch {
-                dados = { detail: texto };
-            }
-        }
-
-        if (!resposta.ok) {
-            let detalhe =
-                dados?.detail ||
-                dados?.mensagem ||
-                `Erro HTTP ${resposta.status}.`;
-
-            if (Array.isArray(detalhe)) {
-                detalhe = detalhe
-                    .map(item => item.msg || String(item))
-                    .join(", ");
-            }
-
-            if (resposta.status === 401) {
-                throw new Error(
-                    "Sua sessão expirou ou você não está autenticado. Entre novamente."
-                );
-            }
-
-            if (resposta.status === 403) {
-                throw new Error(
-                    "Seu perfil não tem permissão para realizar esta operação."
-                );
-            }
-
-            throw new Error(String(detalhe));
-        }
-
-        return dados;
+    .conteudo-principal {
+        padding: 24px;
     }
 
-    function obterLista(dados, propriedade) {
-        if (Array.isArray(dados)) return dados;
+    .painel,
+    .painel-veiculos,
+    .painel-tabela,
+    .cartao,
+    .card {
+        padding: 20px;
+    }
+}
 
-        if (Array.isArray(dados?.[propriedade])) {
-            return dados[propriedade];
-        }
+/* ---------- Celulares e telas pequenas ---------- */
 
-        if (Array.isArray(dados?.items)) return dados.items;
-        if (Array.isArray(dados?.results)) return dados.results;
-
-        return [];
+@media (max-width: 768px) {
+    :root {
+        --largura-menu: 0px;
     }
 
-    // =====================================================
-    // IDENTIFICAÇÃO DE CLIENTES, MARCAS E MODELOS
-    // =====================================================
-
-    function idCliente(cliente) {
-        return cliente?.id_clients ??
-            cliente?.id_cliente ??
-            cliente?.id;
+    .menu {
+        position: static;
+        width: 100%;
+        height: auto;
+        max-height: none;
+        padding: 16px;
+        overflow: visible;
     }
 
-    function nomeCliente(cliente) {
-        return cliente?.nome_completo ??
-            cliente?.nome_cliente ??
-            cliente?.nome ??
-            "—";
+    .identidade {
+        margin-bottom: 12px;
+        padding-bottom: 14px;
     }
 
-    function idModeloVeiculo(veiculo) {
-        return veiculo.id_modelo ??
-            veiculo.id_modelo_veiculo ??
-            veiculo.modelo_id ??
-            veiculo.modelo?.id_modelo ??
-            veiculo.modelo?.id;
+    .navegacao {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
     }
 
-    function obterModelo(veiculo) {
-        if (
-            veiculo.modelo &&
-            typeof veiculo.modelo === "object"
-        ) {
-            return veiculo.modelo;
-        }
-
-        const id = idModeloVeiculo(veiculo);
-
-        return modelos.find(modelo =>
-            String(modelo.id_modelo ?? modelo.id) === String(id)
-        );
+    .menu-link {
+        min-width: 0;
+        margin: 0;
+        padding: 10px;
+        font-size: 13px;
+        overflow-wrap: anywhere;
     }
 
-    function obterMarca(veiculo) {
-        const modelo = obterModelo(veiculo);
-
-        if (
-            modelo?.marca &&
-            typeof modelo.marca === "object"
-        ) {
-            return modelo.marca;
-        }
-
-        if (
-            veiculo.marca &&
-            typeof veiculo.marca === "object"
-        ) {
-            return veiculo.marca;
-        }
-
-        const id = modelo?.id_marca ??
-            modelo?.id_marca_veiculo ??
-            veiculo.id_marca ??
-            veiculo.id_marca_veiculo ??
-            veiculo.marca_id ??
-            veiculo.marca?.id_marca ??
-            veiculo.marca?.id;
-
-        return marcas.find(marca =>
-            String(marca.id_marca ?? marca.id) === String(id)
-        );
+    .conteudo-principal {
+        margin-left: 0;
+        padding: 20px 14px;
     }
 
-    function nomeModelo(veiculo) {
-        const modelo = obterModelo(veiculo);
-
-        return modelo?.nome_modelo ??
-            modelo?.nome ??
-            modelo?.descricao ??
-            veiculo.nome_modelo ??
-            veiculo.modelo_nome ??
-            (
-                typeof veiculo.modelo === "string"
-                    ? veiculo.modelo
-                    : null
-            ) ??
-            "—";
+    .conteudo-principal > header,
+    .cabecalho-pagina {
+        align-items: flex-start;
     }
 
-    function nomeMarca(veiculo) {
-        const marca = obterMarca(veiculo);
-
-        return marca?.nome_marca ??
-            marca?.nome ??
-            marca?.descricao ??
-            veiculo.nome_marca ??
-            veiculo.marca_nome ??
-            (
-                typeof veiculo.marca === "string"
-                    ? veiculo.marca
-                    : null
-            ) ??
-            "—";
+    .conteudo-principal h1 {
+        font-size: 25px;
     }
 
-    function idResponsavel(veiculo) {
-        return veiculo.id_clients ??
-            veiculo.id_cliente ??
-            veiculo.cliente_id ??
-            veiculo.cliente?.id_clients ??
-            veiculo.cliente?.id_cliente ??
-            veiculo.clients?.id_clients;
+    .secao-veiculos {
+        gap: 16px;
     }
 
-    function nomeResponsavel(veiculo) {
-        const id = idResponsavel(veiculo);
-
-        const cliente = clientes.find(item =>
-            String(idCliente(item)) === String(id)
-        );
-
-        if (cliente) return nomeCliente(cliente);
-
-        if (
-            veiculo.cliente &&
-            typeof veiculo.cliente === "object"
-        ) {
-            return nomeCliente(veiculo.cliente);
-        }
-
-        if (
-            veiculo.clients &&
-            typeof veiculo.clients === "object"
-        ) {
-            return nomeCliente(veiculo.clients);
-        }
-
-        return veiculo.nome_cliente ?? "—";
+    .painel,
+    .painel-veiculos,
+    .painel-tabela,
+    .cartao,
+    .card,
+    #painel-formulario-veiculo {
+        padding: 16px;
     }
 
-    // =====================================================
-    // VÍNCULOS DE MENSALISTAS
-    // =====================================================
-
-    function dataHojeISO() {
-        const hoje = new Date();
-
-        return [
-            hoje.getFullYear(),
-            String(hoje.getMonth() + 1).padStart(2, "0"),
-            String(hoje.getDate()).padStart(2, "0")
-        ].join("-");
+    .resumo-veiculos {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
     }
 
-    function vinculoEstaAtivo(vinculo, hoje = dataHojeISO()) {
-        const inicio = String(
-            vinculo?.data_inicio ?? ""
-        ).slice(0, 10);
-
-        const fim =
-            vinculo?.data_fim == null ||
-            vinculo.data_fim === ""
-                ? null
-                : String(vinculo.data_fim).slice(0, 10);
-
-        return inicio !== "" &&
-            inicio <= hoje &&
-            fim === null;
+    .resumo-veiculos > div,
+    .resumo-veiculos > article {
+        padding: 14px;
     }
 
-    function obterVinculoAtivo(
-        idClients,
-        listaVinculos = vinculosMensalistas
-    ) {
-        if (idClients == null) return null;
-
-        return listaVinculos.find(vinculo =>
-            String(vinculo.id_clients) === String(idClients) &&
-            vinculoEstaAtivo(vinculo)
-        ) ?? null;
+    .resumo-veiculos strong {
+        font-size: 22px;
     }
 
-    function clienteEhMensalista(idClients) {
-        return obterVinculoAtivo(idClients) !== null;
+    .grade-formulario-veiculos,
+    .grade-formulario-veiculo,
+    .grade-formulario {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
     }
 
-    async function carregarVinculosMensalistas() {
-        const dados = await requisicaoAPI(
-            `${API_VINCULOS}?incluir_encerrados=true`
-        );
-
-        vinculosMensalistas = obterLista(dados, "vinculos");
-
-        return vinculosMensalistas;
+    .barra-pesquisa {
+        flex-direction: column;
+        align-items: stretch;
     }
 
-    async function carregarVagasMensalistas() {
-        const dados = await requisicaoAPI(API_VAGAS);
-        const vagas = obterLista(dados, "vagas");
-
-        vagasMensalistas = vagas.filter(vaga => {
-            const tipo = String(
-                vaga.tipo ?? vaga.tipo_vaga ?? ""
-            ).toUpperCase();
-
-            const statusVaga = String(
-                vaga.status ?? ""
-            ).toUpperCase();
-
-            return tipo.includes("MENSALISTA") &&
-                statusVaga.includes("ATIVA");
-        });
-
-        return vagasMensalistas;
+    .acoes-formulario {
+        flex-direction: column-reverse;
     }
 
-    async function sincronizarMensalista(
-        idClients,
-        desejaSerMensalista
-    ) {
-        const hoje = dataHojeISO();
-
-        if (idClients == null) {
-            throw new Error(
-                "Não foi possível identificar o cliente responsável."
-            );
-        }
-
-        const todosVinculos = await carregarVinculosMensalistas();
-
-        const vinculosCliente = todosVinculos.filter(v =>
-            String(v.id_clients) === String(idClients)
-        );
-
-        const ativo = obterVinculoAtivo(
-            idClients,
-            vinculosCliente
-        );
-
-        if (desejaSerMensalista && ativo) return;
-        if (!desejaSerMensalista && !ativo) return;
-
-        if (!desejaSerMensalista && ativo) {
-            const idVinculo = ativo.id_vinculo ?? ativo.id;
-
-            if (idVinculo == null) {
-                throw new Error(
-                    "O vínculo mensalista ativo não possui um identificador."
-                );
-            }
-
-            await requisicaoAPI(
-                `${API_VINCULOS}/${encodeURIComponent(idVinculo)}` +
-                `/encerrar?data_fim=${encodeURIComponent(hoje)}`,
-                { method: "PATCH" }
-            );
-
-            vinculosMensalistas = vinculosMensalistas.map(v =>
-                String(v.id_vinculo ?? v.id) === String(idVinculo)
-                    ? { ...v, data_fim: hoje }
-                    : v
-            );
-
-            return;
-        }
-
-        const ocupadas = new Set(
-            vinculosMensalistas
-                .filter(v => vinculoEstaAtivo(v, hoje))
-                .map(v => v.id_vaga)
-                .filter(id => id != null)
-                .map(String)
-        );
-
-        const vagas = await carregarVagasMensalistas();
-
-        const vagaDisponivel = vagas.find(vaga => {
-            const id = vaga.id_vaga ?? vaga.id;
-
-            return id != null &&
-                !ocupadas.has(String(id));
-        });
-
-        const idVaga =
-            vagaDisponivel?.id_vaga ??
-            vagaDisponivel?.id;
-
-        if (idVaga == null) {
-            throw new Error(
-                "Não há vaga mensalista disponível para vincular este cliente. " +
-                "Cadastre ou libere uma vaga mensalista ativa e tente novamente."
-            );
-        }
-
-        await requisicaoAPI(API_VINCULOS, {
-            method: "POST",
-            body: JSON.stringify({
-                id_clients: Number(idClients),
-                id_vaga: Number(idVaga),
-                data_inicio: hoje,
-                data_fim: null
-            })
-        });
-
-        await carregarVinculosMensalistas();
+    .acoes-formulario button,
+    #botao-salvar-veiculo,
+    #botao-cancelar-veiculo {
+        width: 100%;
     }
 
-    // =====================================================
-    // MENSAGENS E ELEMENTOS HTML
-    // =====================================================
-
-    function mostrarMensagem(texto, tipo = "") {
-        if (!mensagemFormulario) return;
-
-        mensagemFormulario.textContent = texto;
-        mensagemFormulario.className =
-            "mensagem-formulario-veiculo";
-
-        if (tipo) {
-            mensagemFormulario.classList.add(tipo);
-        }
+    .fundo-modal {
+        align-items: flex-start;
+        padding: 12px;
     }
 
-    function mostrarMensagemLista(texto, tipo = "") {
-        if (!mensagemLista) return;
+    .conteudo-modal {
+        max-height: calc(100vh - 24px);
+        padding: 18px;
+    }
+}
 
-        mensagemLista.textContent = texto;
-        mensagemLista.className = "mensagem-lista-veiculos";
+/* ---------- Celulares muito estreitos ---------- */
 
-        if (tipo) {
-            mensagemLista.classList.add(tipo);
-        }
+@media (max-width: 380px) {
+    .navegacao {
+        grid-template-columns: minmax(0, 1fr);
     }
 
-    function criarCelula(valor) {
-        const td = document.createElement("td");
-
-        td.textContent =
-            valor == null || valor === ""
-                ? "—"
-                : String(valor);
-
-        return td;
+    .resumo-veiculos {
+        grid-template-columns: minmax(0, 1fr);
     }
 
-    function criarSituacao(texto, classe) {
-        const span = document.createElement("span");
-
-        span.className = `situacao-veiculo ${classe}`;
-        span.textContent = texto;
-
-        return span;
+    .conteudo-principal {
+        padding: 16px 10px;
     }
 
-    function criarBotaoAcao(texto, classe, callback, veiculo) {
-        const botao = document.createElement("button");
-
-        botao.type = "button";
-        botao.className =
-            `botao-acao-veiculo ${classe}`.trim();
-
-        botao.textContent = texto;
-        botao.addEventListener("click", () => callback(veiculo));
-
-        return botao;
+    .painel,
+    .painel-veiculos,
+    .painel-tabela,
+    .cartao,
+    .card,
+    #painel-formulario-veiculo {
+        padding: 12px;
     }
+}
 
-    // =====================================================
-    // RENDERIZAÇÃO DA LISTA
-    // =====================================================
+/* ---------- Preferência por movimento reduzido ---------- */
 
-    function renderizarVeiculos() {
-        if (!lista) return;
-
-        const termo = (
-            pesquisa?.value || ""
-        ).trim().toLocaleLowerCase("pt-BR");
-
-        const filtrados = veiculos.filter(veiculo => [
-            veiculo.placa,
-            veiculo.cor,
-            nomeMarca(veiculo),
-            nomeModelo(veiculo),
-            nomeResponsavel(veiculo)
-        ].some(valor =>
-            String(valor ?? "")
-                .toLocaleLowerCase("pt-BR")
-                .includes(termo)
-        ));
-
-        lista.replaceChildren();
-
-        if (filtrados.length === 0) {
-            const tr = document.createElement("tr");
-            const td = document.createElement("td");
-
-            td.colSpan = 7;
-            td.className = "mensagem-vazia";
-
-            const icone = document.createElement("span");
-            icone.className = "mensagem-vazia-icone";
-            icone.setAttribute("aria-hidden", "true");
-            icone.textContent = "🚗";
-
-            const titulo = document.createElement("strong");
-            titulo.textContent = termo
-                ? "Nenhum veículo encontrado"
-                : "Nenhum veículo cadastrado";
-
-            const descricao = document.createElement("span");
-            descricao.textContent = termo
-                ? "Tente pesquisar por outra placa, marca ou modelo."
-                : "Nenhum veículo está disponível para consulta.";
-
-            td.append(icone, titulo, descricao);
-            tr.appendChild(td);
-            lista.appendChild(tr);
-
-            return;
-        }
-
-        filtrados.forEach(veiculo => {
-            const tr = document.createElement("tr");
-
-            tr.appendChild(criarCelula(veiculo.placa));
-            tr.appendChild(criarCelula(nomeMarca(veiculo)));
-            tr.appendChild(criarCelula(nomeModelo(veiculo)));
-            tr.appendChild(criarCelula(veiculo.cor));
-            tr.appendChild(criarCelula(nomeResponsavel(veiculo)));
-
-            const mensalista = clienteEhMensalista(
-                idResponsavel(veiculo)
-            );
-
-            const tdMensalista = document.createElement("td");
-
-            tdMensalista.appendChild(
-                criarSituacao(
-                    mensalista ? "Sim" : "Não",
-                    mensalista
-                        ? "mensalista"
-                        : "nao-mensalista"
-                )
-            );
-
-            tr.appendChild(tdMensalista);
-
-            const tdAcoes = document.createElement("td");
-
-            if (podeGerenciarVeiculos) {
-                const acoes = document.createElement("div");
-                acoes.className = "acoes-veiculo";
-
-                acoes.appendChild(
-                    criarBotaoAcao(
-                        "Editar",
-                        "",
-                        abrirEdicao,
-                        veiculo
-                    )
-                );
-
-                acoes.appendChild(
-                    criarBotaoAcao(
-                        "Excluir",
-                        "excluir",
-                        excluirVeiculo,
-                        veiculo
-                    )
-                );
-
-                tdAcoes.appendChild(acoes);
-            } else {
-                tdAcoes.className = "acoes-somente-consulta";
-                tdAcoes.textContent = "Somente consulta";
-            }
-
-            tr.appendChild(tdAcoes);
-            lista.appendChild(tr);
-        });
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
     }
-
-    // =====================================================
-    // CARREGAMENTO DE DADOS
-    // =====================================================
-
-    async function carregarTudo() {
-        if (lista) {
-            lista.replaceChildren();
-
-            const tr = document.createElement("tr");
-            const td = document.createElement("td");
-
-            td.colSpan = 7;
-            td.className = "mensagem-vazia";
-            td.textContent = "Carregando veículos...";
-
-            tr.appendChild(td);
-            lista.appendChild(tr);
-        }
-
-        try {
-            const [
-                dadosVeiculos,
-                dadosMarcas,
-                dadosModelos,
-                dadosClientes
-            ] = await Promise.all([
-                requisicaoAPI(API_VEICULOS),
-                requisicaoAPI(API_MARCAS),
-                requisicaoAPI(API_MODELOS),
-                requisicaoAPI(API_CLIENTES)
-            ]);
-
-            veiculos = obterLista(dadosVeiculos, "veiculos");
-            marcas = obterLista(dadosMarcas, "marcas");
-            modelos = obterLista(dadosModelos, "modelos");
-            clientes = obterLista(dadosClientes, "clientes");
-
-            await carregarVinculosMensalistas();
-
-            renderizarVeiculos();
-            mostrarMensagemLista("");
-        } catch (erro) {
-            console.error("Erro ao carregar veículos:", erro);
-
-            mostrarMensagemLista(erro.message, "erro");
-
-            if (lista) {
-                lista.replaceChildren();
-
-                const tr = document.createElement("tr");
-                const td = document.createElement("td");
-
-                td.colSpan = 7;
-                td.className = "mensagem-vazia";
-                td.textContent =
-                    "Não foi possível carregar os veículos.";
-
-                tr.appendChild(td);
-                lista.appendChild(tr);
-            }
-        }
-    }
-
-    // =====================================================
-    // FORMULÁRIOS DE CADASTRO E EDIÇÃO
-    // =====================================================
-
-    async function carregarClientes(idSelecionado = null) {
-        const dados = await requisicaoAPI(API_CLIENTES);
-
-        clientes = obterLista(dados, "clientes");
-
-        if (!campoCliente) return;
-
-        campoCliente.replaceChildren();
-
-        const inicial = document.createElement("option");
-        inicial.value = "";
-        inicial.textContent = "Selecione o cliente";
-
-        campoCliente.appendChild(inicial);
-
-        clientes.forEach(cliente => {
-            const id = idCliente(cliente);
-
-            if (id == null) return;
-
-            const opcao = document.createElement("option");
-
-            opcao.value = String(id);
-            opcao.textContent = nomeCliente(cliente);
-
-            campoCliente.appendChild(opcao);
-        });
-
-        if (idSelecionado != null) {
-            campoCliente.value = String(idSelecionado);
-
-            if (campoCliente.value !== String(idSelecionado)) {
-                throw new Error(
-                    `O cliente ID ${idSelecionado} não foi encontrado na lista.`
-                );
-            }
-        }
-    }
-
-    async function carregarMarcas(idSelecionado = null) {
-        const dados = await requisicaoAPI(API_MARCAS);
-
-        marcas = obterLista(dados, "marcas");
-
-        if (!campoMarca) return;
-
-        campoMarca.replaceChildren();
-
-        const inicial = document.createElement("option");
-        inicial.value = "";
-        inicial.textContent = "Selecione a marca";
-
-        campoMarca.appendChild(inicial);
-
-        marcas
-            .filter(marca =>
-                marca.ativo !== false &&
-                marca.ativo !== 0
-            )
-            .forEach(marca => {
-                const option = document.createElement("option");
-
-                option.value = marca.id_marca ?? marca.id;
-                option.textContent =
-                    marca.nome_marca ?? marca.nome;
-
-                campoMarca.appendChild(option);
-            });
-
-        if (idSelecionado != null) {
-            campoMarca.value = String(idSelecionado);
-        }
-    }
-
-    async function carregarModelos(
-        idMarca,
-        idSelecionado = null
-    ) {
-        if (!campoModelo) return;
-
-        campoModelo.replaceChildren();
-
-        const inicial = document.createElement("option");
-
-        inicial.value = "";
-        inicial.textContent = idMarca
-            ? "Selecione o modelo"
-            : "Selecione primeiro a marca";
-
-        campoModelo.appendChild(inicial);
-        campoModelo.disabled = !idMarca;
-
-        if (!idMarca) return;
-
-        const dados = await requisicaoAPI(API_MODELOS);
-
-        modelos = obterLista(dados, "modelos");
-
-        modelos
-            .filter(modelo => {
-                const idDaMarca = modelo.id_marca ??
-                    modelo.id_marca_veiculo ??
-                    modelo.marca_id;
-
-                return String(idDaMarca) === String(idMarca) &&
-                    modelo.ativo !== false &&
-                    modelo.ativo !== 0;
-            })
-            .forEach(modelo => {
-                const option = document.createElement("option");
-
-                option.value = modelo.id_modelo ?? modelo.id;
-                option.textContent =
-                    modelo.nome_modelo ??
-                    modelo.nome ??
-                    modelo.descricao;
-
-                campoModelo.appendChild(option);
-            });
-
-        campoModelo.disabled = false;
-
-        if (idSelecionado != null) {
-            campoModelo.value = String(idSelecionado);
-        }
-    }
-
-    async function abrirNovoVeiculo() {
-        if (!podeGerenciarVeiculos) return;
-
-        if (!formulario || !painelFormulario) return;
-
-        formulario.reset();
-
-        if (campoId) campoId.value = "";
-
-        mensalistaOriginal = false;
-        clienteOriginal = null;
-
-        if (tituloFormulario) {
-            tituloFormulario.textContent = "Cadastrar veículo";
-        }
-
-        if (botaoSalvar) {
-            botaoSalvar.textContent = "Salvar veículo";
-        }
-
-        mostrarMensagem("");
-
-        if (campoModelo) campoModelo.disabled = true;
-
-        painelFormulario.hidden = false;
-
-        painelFormulario.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
-
-        try {
-            await Promise.all([
-                carregarClientes(),
-                carregarMarcas()
-            ]);
-
-            await carregarModelos("");
-        } catch (erro) {
-            mostrarMensagem(
-                `Erro ao carregar os dados: ${erro.message}`,
-                "erro"
-            );
-        }
-    }
-
-    async function abrirEdicao(veiculo) {
-        if (!podeGerenciarVeiculos) return;
-
-        if (!formulario || !painelFormulario) return;
-
-        mostrarMensagem("");
-        formulario.reset();
-
-        if (campoId) {
-            campoId.value =
-                veiculo.id_veiculo ?? veiculo.id ?? "";
-        }
-
-        if (campoPlaca) campoPlaca.value = veiculo.placa ?? "";
-        if (campoCor) campoCor.value = veiculo.cor ?? "";
-
-        const modelo = obterModelo(veiculo);
-        const marca = obterMarca(veiculo);
-
-        const idMarca = marca?.id_marca ??
-            marca?.id ??
-            modelo?.id_marca ??
-            modelo?.id_marca_veiculo ??
-            veiculo.id_marca;
-
-        const idModelo = idModeloVeiculo(veiculo);
-        const idDoCliente = idResponsavel(veiculo);
-
-        clienteOriginal = idDoCliente;
-        mensalistaOriginal = clienteEhMensalista(idDoCliente);
-
-        if (tituloFormulario) {
-            tituloFormulario.textContent = "Editar veículo";
-        }
-
-        if (botaoSalvar) {
-            botaoSalvar.textContent = "Salvar alterações";
-        }
-
-        painelFormulario.hidden = false;
-
-        painelFormulario.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
-
-        try {
-            await carregarVinculosMensalistas();
-
-            mensalistaOriginal =
-                clienteEhMensalista(idDoCliente);
-
-            await Promise.all([
-                carregarClientes(idDoCliente),
-                carregarMarcas(idMarca)
-            ]);
-
-            if (idMarca != null) {
-                await carregarModelos(idMarca, idModelo);
-            } else {
-                await carregarModelos("");
-            }
-
-            if (campoMensalista) {
-                campoMensalista.value =
-                    mensalistaOriginal ? "sim" : "nao";
-            }
-        } catch (erro) {
-            console.error("Erro ao abrir edição:", erro);
-
-            mostrarMensagem(
-                `Não foi possível carregar os dados para edição: ${erro.message}`,
-                "erro"
-            );
-        }
-    }
-
-    function fecharFormulario() {
-        if (!podeGerenciarVeiculos) return;
-
-        if (painelFormulario) {
-            painelFormulario.hidden = true;
-        }
-
-        formulario?.reset();
-
-        if (campoId) campoId.value = "";
-        if (campoModelo) campoModelo.disabled = true;
-
-        mensalistaOriginal = false;
-        clienteOriginal = null;
-
-        if (tituloFormulario) {
-            tituloFormulario.textContent = "Cadastrar veículo";
-        }
-
-        if (botaoSalvar) {
-            botaoSalvar.textContent = "Salvar veículo";
-        }
-
-        mostrarMensagem("");
-    }
-
-    async function salvarVeiculo(evento) {
-        evento.preventDefault();
-
-        if (!podeGerenciarVeiculos) {
-            mostrarMensagem(
-                "Seu perfil não tem permissão para alterar veículos.",
-                "erro"
-            );
-            return;
-        }
-
-        mostrarMensagem("");
-
-        if (!formulario || !formulario.reportValidity()) return;
-
-        const id = campoId?.value.trim() ?? "";
-        const idClienteSelecionado = Number(campoCliente?.value);
-        const desejaSerMensalista =
-            campoMensalista?.value === "sim";
-
-        if (!idClienteSelecionado) {
-            mostrarMensagem(
-                "Selecione o cliente responsável.",
-                "erro"
-            );
-            return;
-        }
-
-        if (!campoModelo?.value) {
-            mostrarMensagem(
-                "Selecione o modelo do veículo.",
-                "erro"
-            );
-            return;
-        }
-
-        const dados = {
-            id_clients: idClienteSelecionado,
-            id_modelo: Number(campoModelo.value),
-            placa: campoPlaca.value.trim().toUpperCase(),
-            cor: campoCor.value
-        };
-
-        if (botaoSalvar) {
-            botaoSalvar.disabled = true;
-            botaoSalvar.textContent = "Salvando...";
-        }
-
-        try {
-            await requisicaoAPI(
-                id
-                    ? `${API_VEICULOS}/${encodeURIComponent(id)}`
-                    : API_VEICULOS,
-                {
-                    method: id ? "PUT" : "POST",
-                    body: JSON.stringify(dados)
-                }
-            );
-
-            await sincronizarMensalista(
-                idClienteSelecionado,
-                desejaSerMensalista
-            );
-
-            fecharFormulario();
-
-            await carregarTudo();
-
-            mostrarMensagemLista(
-                id
-                    ? "Veículo e vínculo mensalista atualizados com sucesso."
-                    : "Veículo cadastrado com sucesso.",
-                "sucesso"
-            );
-        } catch (erro) {
-            console.error("Erro ao salvar veículo:", erro);
-
-            mostrarMensagem(
-                erro.message || "Não foi possível salvar os dados.",
-                "erro"
-            );
-
-            await carregarTudo();
-        } finally {
-            if (botaoSalvar) {
-                botaoSalvar.disabled = false;
-
-                botaoSalvar.textContent = campoId?.value
-                    ? "Salvar alterações"
-                    : "Salvar veículo";
-            }
-        }
-    }
-
-    async function excluirVeiculo(veiculo) {
-        if (!podeGerenciarVeiculos) return;
-
-        const id = veiculo.id_veiculo ?? veiculo.id;
-
-        if (!id) {
-            mostrarMensagemLista(
-                "Não foi possível identificar o veículo.",
-                "erro"
-            );
-            return;
-        }
-
-        const confirmado = confirm(
-            `Deseja realmente desativar o veículo ${veiculo.placa ?? ""}?`
-        );
-
-        if (!confirmado) return;
-
-        try {
-            await requisicaoAPI(
-                `${API_VEICULOS}/${encodeURIComponent(id)}`,
-                { method: "DELETE" }
-            );
-
-            await carregarTudo();
-
-            mostrarMensagemLista(
-                "Veículo desativado com sucesso.",
-                "sucesso"
-            );
-        } catch (erro) {
-            console.error("Erro ao desativar veículo:", erro);
-
-            mostrarMensagemLista(
-                erro.message ||
-                    "Não foi possível desativar o veículo.",
-                "erro"
-            );
-        }
-    }
-
-    // =====================================================
-    // EVENTOS
-    // =====================================================
-
-    if (podeGerenciarVeiculos) {
-        botaoNovoVeiculo?.addEventListener(
-            "click",
-            abrirNovoVeiculo
-        );
-
-        botaoCancelar?.addEventListener(
-            "click",
-            fecharFormulario
-        );
-
-        formulario?.addEventListener(
-            "submit",
-            salvarVeiculo
-        );
-    }
-
-    pesquisa?.addEventListener(
-        "input",
-        renderizarVeiculos
-    );
-
-    campoMarca?.addEventListener("change", async () => {
-        if (!podeGerenciarVeiculos) return;
-
-        try {
-            await carregarModelos(campoMarca.value);
-        } catch (erro) {
-            mostrarMensagem(
-                `Erro ao carregar modelos: ${erro.message}`,
-                "erro"
-            );
-        }
-    });
-
-    // Consulta inicial para ambos os perfis.
-    carregarTudo();
 }

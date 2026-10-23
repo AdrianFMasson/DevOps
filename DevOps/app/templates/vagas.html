@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -9,174 +10,309 @@
     <link rel="stylesheet" href="/static/css/vagas.css">
     <script src="/static/js/vagas.js" defer></script>
 </head>
-<body class="tema-escuro">
+<body class="tema-escuro"
+      data-perfil="{{ usuario.perfil.value if usuario is defined and usuario.perfil is not none else '' }}">
     <div class="pagina">
         <aside class="menu-lateral">
             <div class="identidade">
                 <div class="identidade-icone">E</div>
                 <div class="identidade-texto">
                     <h1>Estacionamento</h1>
-                    <p>Painel administrativo</p>
+                    <p>{{ 'Painel administrativo' if eh_admin else 'Área do operador' }}</p>
                 </div>
             </div>
+
             <nav class="menu">
                 <span class="menu-titulo">MENU PRINCIPAL</span>
-                <a href="/dashboard-admin" class="menu-link"><span>▦</span> Dashboard</a>
-                <a href="/vagas" class="menu-link"><span>▤</span> Vagas</a>
-                <a href="/movimentacoes" class="menu-link"><span>⇄</span> Movimentações</a>
 
-                <span class="menu-titulo">GERENCIAMENTO</span>
-                <a href="/clientes" class="menu-link"><span>♙</span> Clientes</a>
-                <a href="/veiculos" class="menu-link"><span>▣</span> Veículos</a>
-                <a href="/usuarios" class="menu-link ativo"><span>♟</span> Usuários</a>
+                {% if eh_admin %}
+                    <a href="/dashboard-admin" class="menu-link">
+                        <span>▦</span> Dashboard
+                    </a>
+                    <a href="/vagas" class="menu-link ativo">
+                        <span>▤</span> Vagas
+                    </a>
+                    <a href="/movimentacoes" class="menu-link">
+                        <span>⇄</span> Movimentações
+                    </a>
+
+                    <span class="menu-titulo">GERENCIAMENTO</span>
+                    <a href="/clientes" class="menu-link">
+                        <span>♙</span> Clientes
+                    </a>
+                    <a href="/veiculos" class="menu-link">
+                        <span>▣</span> Veículos
+                    </a>
+                    <a href="/usuarios" class="menu-link">
+                        <span>♟</span> Usuários
+                    </a>
+                {% else %}
+                    <a href="/dashboard-user" class="menu-link">
+                        <span>▦</span> Dashboard
+                    </a>
+                    <a href="/user/vagas" class="menu-link ativo">
+                        <span>▤</span> Vagas
+                    </a>
+                    <a href="/user/clientes" class="menu-link">
+                        <span>♙</span> Clientes
+                    </a>
+                    <a href="/user/veiculos" class="menu-link">
+                        <span>▣</span> Veículos
+                    </a>
+                {% endif %}
             </nav>
+
             <div class="rodape-menu">
                 <div class="usuario-resumo">
-                    <div class="usuario-avatar">A</div>
+                    <div class="usuario-avatar">
+                        {{ usuario.nome[0]|upper if usuario is defined and usuario.nome else 'U' }}
+                    </div>
                     <div class="usuario-informacoes">
-                        <strong>{{ usuario.nome if usuario is defined else "Administrador" }}</strong>
-                        <span>Administrador</span>
+                        <strong>{{ usuario.nome if usuario is defined else 'Usuário' }}</strong>
+                        <span>{{ 'Administrador' if eh_admin else 'Operador' }}</span>
                     </div>
                 </div>
                 <a href="/logout" class="botao-sair">Sair da conta</a>
             </div>
         </aside>
+
         <main class="conteudo-principal">
             <header class="cabecalho">
                 <div class="cabecalho-titulo">
-                    <p class="texto-superior">ÁREA ADMINISTRATIVA</p>
+                    <p class="texto-superior">
+                        {{ 'ÁREA ADMINISTRATIVA' if eh_admin else 'ÁREA DO OPERADOR' }}
+                    </p>
                     <h2>Vagas</h2>
-                    <p class="descricao-cabecalho">Consulte e gerencie as vagas do estacionamento.</p>
+                    <p class="descricao-cabecalho">
+                        {{ 'Consulte e gerencie as vagas do estacionamento.'
+                           if eh_admin
+                           else 'Consulte as vagas e suas situações atuais.' }}
+                    </p>
                 </div>
+
                 <div class="cabecalho-acoes">
-                    <button type="button" id="botao-tema" class="botao-tema">☀ Modo claro</button>
-                    <span class="etiqueta-perfil">Administrador</span>
+                    <button type="button" id="botao-tema" class="botao-tema">
+                        ☀ Modo claro
+                    </button>
+                    <span class="etiqueta-perfil">
+                        {{ 'Administrador' if eh_admin else 'Operador' }}
+                    </span>
                 </div>
             </header>
+
             <section class="secao-vagas" aria-labelledby="titulo-vagas">
                 <div class="titulo-secao">
                     <div>
-                        <h3 id="titulo-vagas">Gerenciamento de vagas</h3>
-                        <p>Cadastre vagas e atualize seus tipos e situações.</p>
+                        <h3 id="titulo-vagas">
+                            {{ 'Gerenciamento de vagas' if eh_admin else 'Consulta de vagas' }}
+                        </h3>
+                        <p>
+                            {{ 'Cadastre vagas e atualize seus tipos e situações.'
+                               if eh_admin
+                               else 'Consulte os códigos, tipos e status das vagas.' }}
+                        </p>
                     </div>
-                    <button type="button" id="botao-nova-vaga" class="botao-primario">+ Nova vaga</button>
+
+                    {% if eh_admin %}
+                        <button type="button" id="botao-nova-vaga" class="botao-primario">
+                            + Nova vaga
+                        </button>
+                    {% endif %}
                 </div>
+
                 <div class="resumo-vagas">
-                    <article class="cartao-resumo"><span class="resumo-icone">▤</span><div><span>Total de vagas</span><strong id="total-vagas">—</strong></div></article>
-                    <article class="cartao-resumo"><span class="resumo-icone resumo-ativa">✓</span><div><span>Ativas</span><strong id="vagas-ativas">—</strong></div></article>
-                    <article class="cartao-resumo"><span class="resumo-icone resumo-bloqueada">Ⅱ</span><div><span>Bloqueadas</span><strong id="vagas-bloqueadas">—</strong></div></article>
-                    <article class="cartao-resumo"><span class="resumo-icone resumo-inativa">×</span><div><span>Inativas</span><strong id="vagas-inativas">—</strong></div></article>
+                    <article class="cartao-resumo">
+                        <span class="resumo-icone">▤</span>
+                        <div>
+                            <span>Total de vagas</span>
+                            <strong id="total-vagas">—</strong>
+                        </div>
+                    </article>
+                    <article class="cartao-resumo">
+                        <span class="resumo-icone resumo-ativa">✓</span>
+                        <div>
+                            <span>Ativas</span>
+                            <strong id="vagas-ativas">—</strong>
+                        </div>
+                    </article>
+                    <article class="cartao-resumo">
+                        <span class="resumo-icone resumo-bloqueada">Ⅱ</span>
+                        <div>
+                            <span>Bloqueadas</span>
+                            <strong id="vagas-bloqueadas">—</strong>
+                        </div>
+                    </article>
+                    <article class="cartao-resumo">
+                        <span class="resumo-icone resumo-inativa">×</span>
+                        <div>
+                            <span>Inativas</span>
+                            <strong id="vagas-inativas">—</strong>
+                        </div>
+                    </article>
                 </div>
+
                 <section class="painel-tabela" aria-label="Lista de vagas">
                     <div class="barra-pesquisa">
                         <label for="pesquisa-vagas">Pesquisar vagas</label>
-                        <input type="search" id="pesquisa-vagas" placeholder="Digite o código, tipo ou status">
+                        <input
+                            type="search"
+                            id="pesquisa-vagas"
+                            placeholder="Digite o código, tipo ou status"
+                        >
                     </div>
-                    <p id="mensagem-lista-vagas" class="mensagem-lista-vagas" role="status" aria-live="polite"></p>
+
+                    <p id="mensagem-lista-vagas"
+                       class="mensagem-lista-vagas"
+                       role="status"
+                       aria-live="polite"></p>
+
                     <div class="tabela-responsiva">
                         <table>
                             <thead>
-                                <tr><th>Código</th><th>Tipo</th><th>Status</th><th>Cadastro</th><th>Última atualização</th><th>Ações</th></tr>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Tipo</th>
+                                    <th>Status</th>
+                                    <th>Cadastro</th>
+                                    <th>Última atualização</th>
+                                    <th>Ações</th>
+                                </tr>
                             </thead>
                             <tbody id="lista-vagas">
-                                <tr><td colspan="6" class="mensagem-vazia"><strong>Carregando vagas...</strong><span>Aguarde enquanto consultamos os registros.</span></td></tr>
+                                <tr>
+                                    <td colspan="6" class="mensagem-vazia">
+                                        <strong>Carregando vagas...</strong>
+                                        <span>Aguarde enquanto consultamos os registros.</span>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
             </section>
+
             <footer class="rodape-conteudo">
-                <p>Estacionamento &copy; {{ ano_atual if ano_atual is defined else "2026" }}</p>
-                <p>Painel administrativo</p>
+                <p>Estacionamento &copy; {{ ano_atual if ano_atual is defined else '2026' }}</p>
+                <p>{{ 'Painel administrativo' if eh_admin else 'Área do operador' }}</p>
             </footer>
         </main>
     </div>
 
-    <div id="modal-vaga" class="fundo-modal" hidden>
-        <section class="janela-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-vaga">
-            <div class="cabecalho-modal">
-                <div>
-                    <p class="texto-superior">CADASTRO DE VAGAS</p>
-                    <h2 id="titulo-modal-vaga">Nova vaga</h2>
-                    <p id="descricao-modal-vaga">Informe os dados da nova vaga.</p>
+    {% if eh_admin %}
+        <div id="modal-vaga" class="fundo-modal" hidden>
+            <section class="janela-modal" role="dialog" aria-modal="true"
+                     aria-labelledby="titulo-modal-vaga">
+                <div class="cabecalho-modal">
+                    <div>
+                        <p class="texto-superior">CADASTRO DE VAGAS</p>
+                        <h2 id="titulo-modal-vaga">Nova vaga</h2>
+                        <p id="descricao-modal-vaga">Informe os dados da nova vaga.</p>
+                    </div>
+                    <button type="button" class="botao-fechar-modal"
+                            data-fechar-modal aria-label="Fechar">×</button>
                 </div>
-                <button type="button" class="botao-fechar-modal" data-fechar-modal aria-label="Fechar">×</button>
-            </div>
-            <form id="formulario-vaga">
-                <input type="hidden" id="id-vaga">
-                <div class="campo-formulario">
-                    <label for="codigo-vaga">Código da vaga</label>
-                    <input type="text" id="codigo-vaga" name="codigo" maxlength="20" placeholder="Ex.: A01" required>
-                </div>
-                <div class="campo-formulario">
-                    <label for="tipo-vaga">Tipo de vaga</label>
-                    <select id="tipo-vaga" name="tipo" required>
-                        <option value="ROTATIVA">Rotativa</option>
-                        <option value="MENSALISTA">Mensalista</option>
-                    </select>
-                </div>
-                <div class="campo-formulario">
-                    <label for="status-vaga">Status</label>
-                    <select id="status-vaga" name="status" required>
-                        <option value="ATIVA">Ativa</option>
-                        <option value="BLOQUEADA">Bloqueada</option>
-                        <option value="INATIVA">Inativa</option>
-                    </select>
-                </div>
-                <p id="mensagem-formulario-vaga" class="mensagem-formulario" role="alert"></p>
-                <div class="acoes-modal">
-                    <button type="button" class="botao-secundario" data-fechar-modal>Cancelar</button>
-                    <button type="submit" id="botao-salvar-vaga" class="botao-primario">Cadastrar vaga</button>
-                </div>
-            </form>
-        </section>
-    </div>
 
-    <div id="modal-status-vaga" class="fundo-modal" hidden>
-        <section class="janela-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-status">
-            <div class="cabecalho-modal">
-                <div>
-                    <p class="texto-superior">GERENCIAMENTO</p>
-                    <h2 id="titulo-modal-status">Alterar status</h2>
-                    <p id="descricao-status-vaga">Selecione o novo status da vaga.</p>
-                </div>
-                <button type="button" class="botao-fechar-modal" data-fechar-modal aria-label="Fechar">×</button>
-            </div>
-            <form id="formulario-status-vaga">
-                <input type="hidden" id="id-status-vaga">
-                <div class="campo-formulario">
-                    <label for="novo-status-vaga">Novo status</label>
-                    <select id="novo-status-vaga" required>
-                        <option value="ATIVA">Ativa</option>
-                        <option value="BLOQUEADA">Bloqueada</option>
-                        <option value="INATIVA">Inativa</option>
-                    </select>
-                </div>
-                <p id="mensagem-status-vaga" class="mensagem-formulario" role="alert"></p>
-                <div class="acoes-modal">
-                    <button type="button" class="botao-secundario" data-fechar-modal>Cancelar</button>
-                    <button type="submit" id="botao-confirmar-status" class="botao-primario">Salvar status</button>
-                </div>
-            </form>
-        </section>
-    </div>
+                <form id="formulario-vaga">
+                    <input type="hidden" id="id-vaga">
 
-    <div id="modal-exclusao-vaga" class="fundo-modal" hidden>
-        <section class="janela-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-exclusao">
-            <div class="cabecalho-modal">
-                <div>
-                    <p class="texto-superior">CONFIRMAÇÃO</p>
-                    <h2 id="titulo-modal-exclusao">Excluir vaga</h2>
+                    <div class="campo-formulario">
+                        <label for="codigo-vaga">Código da vaga</label>
+                        <input type="text" id="codigo-vaga" name="codigo"
+                               maxlength="20" placeholder="Ex.: A01" required>
+                    </div>
+
+                    <div class="campo-formulario">
+                        <label for="tipo-vaga">Tipo de vaga</label>
+                        <select id="tipo-vaga" name="tipo" required>
+                            <option value="ROTATIVA">Rotativa</option>
+                            <option value="MENSALISTA">Mensalista</option>
+                        </select>
+                    </div>
+
+                    <div class="campo-formulario">
+                        <label for="status-vaga">Status</label>
+                        <select id="status-vaga" name="status" required>
+                            <option value="ATIVA">Ativa</option>
+                            <option value="BLOQUEADA">Bloqueada</option>
+                            <option value="INATIVA">Inativa</option>
+                        </select>
+                    </div>
+
+                    <p id="mensagem-formulario-vaga" class="mensagem-formulario"
+                       role="alert"></p>
+
+                    <div class="acoes-modal">
+                        <button type="button" class="botao-secundario"
+                                data-fechar-modal>Cancelar</button>
+                        <button type="submit" id="botao-salvar-vaga"
+                                class="botao-primario">Cadastrar vaga</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <div id="modal-status-vaga" class="fundo-modal" hidden>
+            <section class="janela-modal" role="dialog" aria-modal="true"
+                     aria-labelledby="titulo-modal-status">
+                <div class="cabecalho-modal">
+                    <div>
+                        <p class="texto-superior">GERENCIAMENTO</p>
+                        <h2 id="titulo-modal-status">Alterar status</h2>
+                        <p id="descricao-status-vaga">Selecione o novo status da vaga.</p>
+                    </div>
+                    <button type="button" class="botao-fechar-modal"
+                            data-fechar-modal aria-label="Fechar">×</button>
                 </div>
-                <button type="button" class="botao-fechar-modal" data-fechar-modal aria-label="Fechar">×</button>
-            </div>
-            <p id="texto-exclusao-vaga">Deseja realmente excluir esta vaga?</p>
-            <p id="mensagem-exclusao-vaga" class="mensagem-formulario" role="alert"></p>
-            <div class="acoes-modal">
-                <button type="button" class="botao-secundario" data-fechar-modal>Cancelar</button>
-                <button type="button" id="botao-confirmar-exclusao" class="botao-perigo">Excluir vaga</button>
-            </div>
-        </section>
-    </div>
+
+                <form id="formulario-status-vaga">
+                    <input type="hidden" id="id-status-vaga">
+
+                    <div class="campo-formulario">
+                        <label for="novo-status-vaga">Novo status</label>
+                        <select id="novo-status-vaga" required>
+                            <option value="ATIVA">Ativa</option>
+                            <option value="BLOQUEADA">Bloqueada</option>
+                            <option value="INATIVA">Inativa</option>
+                        </select>
+                    </div>
+
+                    <p id="mensagem-status-vaga" class="mensagem-formulario"
+                       role="alert"></p>
+
+                    <div class="acoes-modal">
+                        <button type="button" class="botao-secundario"
+                                data-fechar-modal>Cancelar</button>
+                        <button type="submit" id="botao-confirmar-status"
+                                class="botao-primario">Salvar status</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <div id="modal-exclusao-vaga" class="fundo-modal" hidden>
+            <section class="janela-modal" role="dialog" aria-modal="true"
+                     aria-labelledby="titulo-modal-exclusao">
+                <div class="cabecalho-modal">
+                    <div>
+                        <p class="texto-superior">CONFIRMAÇÃO</p>
+                        <h2 id="titulo-modal-exclusao">Excluir vaga</h2>
+                    </div>
+                    <button type="button" class="botao-fechar-modal"
+                            data-fechar-modal aria-label="Fechar">×</button>
+                </div>
+
+                <p id="texto-exclusao-vaga">Deseja realmente excluir esta vaga?</p>
+                <p id="mensagem-exclusao-vaga" class="mensagem-formulario"
+                   role="alert"></p>
+
+                <div class="acoes-modal">
+                    <button type="button" class="botao-secundario"
+                            data-fechar-modal>Cancelar</button>
+                    <button type="button" id="botao-confirmar-exclusao"
+                            class="botao-perigo">Excluir vaga</button>
+                </div>
+            </section>
+        </div>
+    {% endif %}
 </body>
 </html>
