@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard Operacional | Estacionamento</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', path='/css/dashboard_user.css') }}"
+    >
+
+    <script
+        src="{{ url_for('static', path='/js/dashboard_user.js') }}"
+        defer
+    ></script>
+</head>
+<body>
+    <div class="pagina">
+        <aside class="menu-lateral" id="menu-lateral">
+            <div class="identidade">
+                <div class="identidade-icone">E</div>
+
+                <div class="identidade-texto">
+                    <h1>Estacionamento</h1>
+                    <p>Painel operacional</p>
+                </div>
+            </div>
+
+            <nav class="navegacao" aria-label="Navegação principal">
+                <a href="dashboard-user" class="item-menu ativo">
+                    <span class="icone-menu" aria-hidden="true">▦</span>
+                    Dashboard
+                </a>
+
+                <a href="user/veiculos" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">🚗</span>
+                    Veículos
+                </a>
+
+                <a href="user/vagas" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">▤</span>
+                    Vagas
+                </a>
+
+                <a href="clientes" class="item-menu">
+                    <span class="icone-menu" aria-hidden="true">♙</span>
+                    Clientes
+                </a>
+
+            </nav>
+
+            <div class="rodape-menu">
+                <div class="usuario-resumo">
+                    <div class="usuario-avatar" aria-hidden="true">O</div>
+
+                    <div class="usuario-informacoes">
+                        <strong id="nome-operador">Operador</strong>
+                        <span>Funcionário</span>
+                    </div>
+                </div>
+
+                <button
+                    type="button"
+                    class="botao-sair"
+                    id="botao-sair"
+                >
+                    Sair do sistema
+                </button>
+            </div>
+        </aside>
+
+        <main class="conteudo-principal">
+            <header class="cabecalho">
+                <div class="cabecalho-titulo">
+                    <div class="texto-superior">VISÃO GERAL</div>
+                    <h2>Dashboard operacional</h2>
+                    <p class="descricao-cabecalho">
+                        Acompanhe os dados do estacionamento.
+                    </p>
+                </div>
+
+                <div class="cabecalho-acoes">
+                    <span class="etiqueta-perfil">
+                        <span class="status-ponto"></span>
+                        Operador
+                    </span>
+
+                    <button
+                        type="button"
+                        class="botao-primario"
+                        id="botao-atualizar"
+                    >
+                        ↻ Atualizar dados
+                    </button>
+                </div>
+            </header>
+
+            <section class="secao-dashboard">
+                <div class="titulo-secao">
+                    <div>
+                        <h3>Resumo do estacionamento</h3>
+                        <p>Indicadores calculados a partir dos dados disponíveis.</p>
+                    </div>
+
+                    <span id="ultima-atualizacao" class="texto-atualizacao">
+                        Aguardando dados...
+                    </span>
+                </div>
+
+                <div
+                    class="mensagem-dashboard"
+                    id="mensagem-dashboard"
+                    role="status"
+                    aria-live="polite"
+                ></div>
+
+                <div class="grade-indicadores">
+                    <article class="cartao-indicador">
+                        <div class="indicador-topo">
+                            <span class="indicador-icone roxo">🚗</span>
+                            <span class="indicador-legenda">Cadastro</span>
+                        </div>
+
+                        <p class="indicador-rotulo">Veículos cadastrados</p>
+                        <strong class="indicador-valor" id="total-veiculos">—</strong>
+                        <span class="indicador-descricao">
+                            Total retornado pela API
+                        </span>
+                    </article>
+
+                    <article class="cartao-indicador">
+                        <div class="indicador-topo">
+                            <span class="indicador-icone azul">▤</span>
+                            <span class="indicador-legenda">Estrutura</span>
+                        </div>
+
+                        <p class="indicador-rotulo">Total de vagas</p>
+                        <strong class="indicador-valor" id="total-vagas">—</strong>
+                        <span class="indicador-descricao">
+                            Vagas retornadas pela API
+                        </span>
+                    </article>
+
+                    <article class="cartao-indicador">
+                        <div class="indicador-topo">
+                            <span class="indicador-icone verde">✓</span>
+                            <span class="indicador-legenda">Disponibilidade</span>
+                        </div>
+
+                        <p class="indicador-rotulo">Vagas disponíveis</p>
+                        <strong class="indicador-valor" id="vagas-disponiveis">—</strong>
+                        <span class="indicador-descricao">
+                            Conforme o status informado pela API
+                        </span>
+                    </article>
+
+                    <article class="cartao-indicador">
+                        <div class="indicador-topo">
+                            <span class="indicador-icone rosa">●</span>
+                            <span class="indicador-legenda">Ocupação</span>
+                        </div>
+
+                        <p class="indicador-rotulo">Vagas ocupadas</p>
+                        <strong class="indicador-valor" id="vagas-ocupadas">—</strong>
+                        <span class="indicador-descricao">
+                            Conforme o status informado pela API
+                        </span>
+                    </article>
+                </div>
+            </section>
+
+
+            <footer class="rodape-conteudo">
+                <p>Estacionamento · Painel operacional</p>
+                <p>Dashboard do funcionário</p>
+            </footer>
+        </main>
+    </div>
+</body>
+</html>

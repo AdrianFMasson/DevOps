@@ -4,88 +4,239 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#f7f0ee">
+
     <title>Veículos | Estacionamento</title>
+
     <link rel="stylesheet" href="/static/css/dashboard_admin.css">
     <link rel="stylesheet" href="/static/css/veiculos.css">
+
     <script src="/static/js/veiculos.js" defer></script>
 </head>
-<body>
+
+<body data-perfil="{{ usuario.perfil.value if usuario.perfil.value is defined else usuario.perfil }}">
     <div class="pagina">
+
         <aside class="menu-lateral">
+
             <div class="identidade">
                 <div class="identidade-icone">E</div>
+
                 <div class="identidade-texto">
                     <h1>Estacionamento</h1>
-                    <p>Painel administrativo</p>
+                    <p>
+                        {{ "Painel administrativo" if usuario.perfil.value == "ADMINISTRADOR" else "Painel do operador" }}
+                    </p>
                 </div>
             </div>
 
             <nav class="menu">
-                <span class="menu-titulo">MENU PRINCIPAL</span>
-                <a href="/dashboard-admin" class="menu-link"><span>▦</span> Dashboard</a>
-                <a href="/vagas" class="menu-link"><span>▤</span> Vagas</a>
-                <a href="/movimentacoes" class="menu-link"><span>⇄</span> Movimentações</a>
 
-                <span class="menu-titulo">GERENCIAMENTO</span>
-                <a href="/clientes" class="menu-link"><span>♙</span> Clientes</a>
-                <a href="/veiculos" class="menu-link"><span>▣</span> Veículos</a>
-                <a href="/usuarios" class="menu-link ativo"><span>♟</span> Usuários</a>
+                {% if usuario.perfil.value == "ADMINISTRADOR" %}
+
+                    <!-- MENU DO ADMINISTRADOR -->
+                    <span class="menu-titulo">MENU PRINCIPAL</span>
+
+                    <a href="/dashboard-admin" class="menu-link">
+                        <span>▦</span>
+                        Dashboard
+                    </a>
+
+                    <a href="/vagas" class="menu-link">
+                        <span>▤</span>
+                        Vagas
+                    </a>
+
+                    <a href="/movimentacoes" class="menu-link">
+                        <span>⇄</span>
+                        Movimentações
+                    </a>
+
+                    <span class="menu-titulo">GERENCIAMENTO</span>
+
+                    <a href="/clientes" class="menu-link">
+                        <span>♙</span>
+                        Clientes
+                    </a>
+
+                    <a href="/veiculos" class="menu-link ativo" aria-current="page">
+                        <span>▣</span>
+                        Veículos
+                    </a>
+
+                    <a href="/usuarios" class="menu-link">
+                        <span>♟</span>
+                        Usuários
+                    </a>
+
+                {% elif usuario.perfil.value == "OPERADOR" %}
+
+                    <!-- MENU DO OPERADOR -->
+                    <span class="menu-titulo">MENU PRINCIPAL</span>
+
+                    <a href="/dashboard-user" class="menu-link">
+                        <span>▦</span>
+                        Dashboard
+                    </a>
+
+                    <span class="menu-titulo">OPERAÇÃO</span>
+
+                    <a href="/user/vagas" class="menu-link">
+                        <span>▤</span>
+                        Vagas
+                    </a>
+
+                    <a href="/user/clientes" class="menu-link">
+                        <span>♙</span>
+                        Clientes
+                    </a>
+
+                    <a href="/user/veiculos" class="menu-link ativo" aria-current="page">
+                        <span>▣</span>
+                        Veículos
+                    </a>
+
+                {% endif %}
+
             </nav>
 
             <div class="rodape-menu">
+
                 <div class="usuario-resumo">
-                    <div class="usuario-avatar" aria-hidden="true">A</div>
+                    <div class="usuario-avatar" aria-hidden="true">
+                        {{ usuario.nome[0] | upper if usuario.nome else "U" }}
+                    </div>
+
                     <div class="usuario-informacoes">
-                        <strong>{{ usuario.nome if usuario is defined else "Administrador" }}</strong>
-                        <span>Administrador</span>
+                        <strong>
+                            {{ usuario.nome }}
+                        </strong>
+
+                        <span>
+                            {{ "Administrador" if usuario.perfil.value == "ADMINISTRADOR" else "Operador" }}
+                        </span>
                     </div>
                 </div>
-                <a href="/logout" class="botao-sair">Sair da conta</a>
+
+                <a href="/logout" class="botao-sair">
+                    Sair da conta
+                </a>
+
             </div>
+
         </aside>
 
         <main class="conteudo-principal">
+
             <header class="cabecalho">
+
                 <div class="cabecalho-titulo">
-                    <p class="texto-superior">ÁREA ADMINISTRATIVA</p>
+
+                    <p class="texto-superior">
+                        {{ "ÁREA ADMINISTRATIVA" if usuario.perfil.value == "ADMINISTRADOR" else "ÁREA DO OPERADOR" }}
+                    </p>
+
                     <h2>Veículos</h2>
-                    <p class="descricao-cabecalho">Consulte e gerencie os veículos cadastrados no estacionamento.</p>
+
+                    <p class="descricao-cabecalho">
+                        {% if usuario.perfil.value == "ADMINISTRADOR" %}
+                            Consulte e gerencie os veículos cadastrados no estacionamento.
+                        {% else %}
+                            Consulte os veículos cadastrados no estacionamento.
+                        {% endif %}
+                    </p>
+
                 </div>
+
                 <div class="cabecalho-acoes">
-                    <span class="etiqueta-perfil">Administrador</span>
+                    <span class="etiqueta-perfil">
+                        {{ "Administrador" if usuario.perfil.value == "ADMINISTRADOR" else "Operador" }}
+                    </span>
                 </div>
+
             </header>
 
             <section class="secao-veiculos" aria-labelledby="titulo-veiculos">
+
                 <div class="titulo-secao">
+
                     <div>
-                        <h3 id="titulo-veiculos">Gerenciamento de veículos</h3>
-                        <p>Pesquise os veículos cadastrados ou adicione um novo veículo.</p>
+                        <h3 id="titulo-veiculos">
+                            Consulta de veículos
+                        </h3>
+
+                        <p>
+                            {% if usuario.perfil.value == "ADMINISTRADOR" %}
+                                Pesquise os veículos cadastrados ou adicione um novo veículo.
+                            {% else %}
+                                Pesquise e consulte os veículos cadastrados.
+                            {% endif %}
+                        </p>
                     </div>
-                    <button type="button" id="botao-novo-veiculo" class="botao-primario">
-                        + Novo veículo
-                    </button>
+
+                    {% if usuario.perfil.value == "ADMINISTRADOR" %}
+                        <button
+                            type="button"
+                            id="botao-novo-veiculo"
+                            class="botao-primario"
+                        >
+                            + Novo veículo
+                        </button>
+                    {% else %}
+                        <button
+                            type="button"
+                            id="botao-novo-veiculo"
+                            class="botao-primario"
+                            hidden
+                        >
+                            + Novo veículo
+                        </button>
+                    {% endif %}
+
                 </div>
 
-                <section id="painel-formulario-veiculo" class="painel-formulario-veiculo" hidden>
+                <!-- FORMULÁRIO DE CADASTRO E EDIÇÃO -->
+                <section
+                    id="painel-formulario-veiculo"
+                    class="painel-formulario-veiculo"
+                    aria-labelledby="titulo-formulario-veiculo"
+                    hidden
+                >
+
                     <div class="titulo-secao">
                         <div>
-                            <h3 id="titulo-formulario-veiculo">Cadastrar veículo</h3>
-                            <p>Preencha os dados do veículo e informe seu responsável.</p>
+                            <h3 id="titulo-formulario-veiculo">
+                                Cadastrar veículo
+                            </h3>
+
+                            <p>
+                                Preencha os dados do veículo e informe seu responsável.
+                            </p>
                         </div>
                     </div>
 
                     <form id="formulario-veiculo">
+
                         <input type="hidden" id="id-veiculo">
 
                         <div class="grade-formulario-veiculos">
+
                             <div class="campo-veiculo">
                                 <label for="placa-veiculo">Placa</label>
-                                <input type="text" id="placa-veiculo" name="placa" placeholder="ABC1D23" maxlength="7" autocomplete="off" required>
+
+                                <input
+                                    type="text"
+                                    id="placa-veiculo"
+                                    name="placa"
+                                    placeholder="ABC1D23"
+                                    maxlength="7"
+                                    autocomplete="off"
+                                    required
+                                >
                             </div>
 
                             <div class="campo-veiculo">
                                 <label for="cor-veiculo">Cor</label>
+
                                 <select id="cor-veiculo" name="cor" required>
                                     <option value="">Selecione a cor</option>
                                     <option value="PRETO">Preto</option>
@@ -105,6 +256,7 @@
 
                             <div class="campo-veiculo">
                                 <label for="marca-veiculo">Marca</label>
+
                                 <select id="marca-veiculo" name="marca" required>
                                     <option value="">Selecione a marca</option>
                                 </select>
@@ -112,46 +264,98 @@
 
                             <div class="campo-veiculo">
                                 <label for="modelo-veiculo">Modelo</label>
-                                <select id="modelo-veiculo" name="modelo" required disabled>
+
+                                <select
+                                    id="modelo-veiculo"
+                                    name="modelo"
+                                    required
+                                    disabled
+                                >
                                     <option value="">Selecione primeiro a marca</option>
                                 </select>
                             </div>
 
                             <div class="campo-veiculo">
                                 <label for="cliente-veiculo">Cliente responsável</label>
+
                                 <select id="cliente-veiculo" name="cliente" required>
                                     <option value="">Selecione o cliente</option>
                                 </select>
                             </div>
 
                             <div class="campo-veiculo">
-                                <label for="mensalista-veiculo">Vinculado a mensalista?</label>
+                                <label for="mensalista-veiculo">
+                                    Vinculado a mensalista?
+                                </label>
+
                                 <select id="mensalista-veiculo" name="mensalista" required>
                                     <option value="">Selecione uma opção</option>
                                     <option value="sim">Sim</option>
                                     <option value="nao">Não</option>
                                 </select>
                             </div>
+
                         </div>
 
-                        <p id="mensagem-formulario-veiculo" class="mensagem-formulario-veiculo" role="alert" aria-live="polite"></p>
+                        <p
+                            id="mensagem-formulario-veiculo"
+                            class="mensagem-formulario-veiculo"
+                            role="alert"
+                            aria-live="polite"
+                        ></p>
 
                         <div class="acoes-formulario-veiculo">
-                            <button type="button" id="botao-cancelar-veiculo" class="botao-secundario">Cancelar</button>
-                            <button type="submit" id="botao-salvar-veiculo" class="botao-primario">Salvar veículo</button>
+
+                            <button
+                                type="button"
+                                id="botao-cancelar-veiculo"
+                                class="botao-secundario"
+                            >
+                                Cancelar
+                            </button>
+
+                            <button
+                                type="submit"
+                                id="botao-salvar-veiculo"
+                                class="botao-primario"
+                            >
+                                Salvar veículo
+                            </button>
+
                         </div>
+
                     </form>
+
                 </section>
 
-                <section class="painel-tabela painel-veiculos" aria-label="Lista de veículos">
+                <!-- LISTAGEM COMPARTILHADA -->
+                <section
+                    class="painel-tabela painel-veiculos"
+                    aria-label="Lista de veículos"
+                >
+
                     <div class="barra-pesquisa">
-                        <label for="pesquisa-veiculos">Pesquisar veículos</label>
-                        <input type="search" id="pesquisa-veiculos" name="pesquisa" placeholder="Digite a placa, cor, marca, modelo ou cliente">
+                        <label for="pesquisa-veiculos">
+                            Pesquisar veículos
+                        </label>
+
+                        <input
+                            type="search"
+                            id="pesquisa-veiculos"
+                            name="pesquisa"
+                            placeholder="Digite a placa, cor, marca, modelo ou cliente"
+                        >
                     </div>
 
-                    <p id="mensagem-lista-veiculos" class="mensagem-lista-veiculos" role="status" aria-live="polite"></p>
+                    <p
+                        id="mensagem-lista-veiculos"
+                        class="mensagem-lista-veiculos"
+                        role="status"
+                        aria-live="polite"
+                    ></p>
 
                     <div class="tabela-responsiva">
+
                         <table>
                             <thead>
                                 <tr>
@@ -164,25 +368,46 @@
                                     <th scope="col">Ações</th>
                                 </tr>
                             </thead>
+
                             <tbody id="lista-veiculos">
                                 <tr>
                                     <td colspan="7" class="mensagem-vazia">
-                                        <span class="mensagem-vazia-icone" aria-hidden="true">🚗</span>
+                                        <span
+                                            class="mensagem-vazia-icone"
+                                            aria-hidden="true"
+                                        >
+                                            🚗
+                                        </span>
+
                                         <strong>Carregando veículos...</strong>
-                                        <span>Aguarde enquanto consultamos os cadastros.</span>
+
+                                        <span>
+                                            Aguarde enquanto consultamos os cadastros.
+                                        </span>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+
                     </div>
+
                 </section>
+
             </section>
 
             <footer class="rodape-conteudo">
-                <p>Estacionamento &copy; {{ ano_atual if ano_atual is defined else "2026" }}</p>
-                <p>Painel administrativo</p>
+                <p>
+                    Estacionamento &copy;
+                    {{ ano_atual if ano_atual is defined else "2026" }}
+                </p>
+
+                <p>
+                    {{ "Painel administrativo" if usuario.perfil.value == "ADMINISTRADOR" else "Painel do operador" }}
+                </p>
             </footer>
+
         </main>
+
     </div>
 </body>
 </html>
