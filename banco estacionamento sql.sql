@@ -840,7 +840,7 @@ WHERE email IN (
     'admin@estacionamento.com',
     'operador@estacionamento.com'
 );
-
+select * from users;
 select * from veiculos;
 
 SELECT VERSION();

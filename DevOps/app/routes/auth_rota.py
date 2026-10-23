@@ -45,7 +45,7 @@ def realizar_login(
     perfil = resultado["usuario"]["perfil"]
 
     if perfil == "ADMINISTRADOR":
-        url_destino = "/dashboard-gestor"
+        url_destino = "/dashboard-admin"
     elif perfil == "OPERADOR":
         url_destino = "/dashboard-user"
     else:

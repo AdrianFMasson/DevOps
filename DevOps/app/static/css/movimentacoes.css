@@ -67,6 +67,8 @@ select:focus-visible {
 
 /* Menu lateral */
 
+/* Menu lateral — padrão dashboard_admin.css */
+
 .menu-lateral {
     position: fixed;
     inset: 0 auto 0 0;
@@ -120,14 +122,25 @@ select:focus-visible {
     font-size: 11px;
 }
 
-.navegacao {
+/* Navegação */
+
+.menu {
     display: flex;
     flex-direction: column;
     gap: 6px;
     padding-top: 25px;
 }
 
-.item-menu {
+.menu-titulo {
+    margin: 18px 0 8px;
+    padding: 0 12px;
+    color: var(--texto-secundario);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+}
+
+.menu-link {
     display: flex;
     align-items: center;
     gap: 13px;
@@ -138,10 +151,11 @@ select:focus-visible {
     color: var(--texto-secundario);
     font-size: 12px;
     font-variant: small-caps;
+    text-decoration: none;
     transition: .2s ease;
 }
 
-.item-menu > span {
+.menu-link > span {
     display: inline-grid;
     width: 22px;
     flex-shrink: 0;
@@ -150,21 +164,23 @@ select:focus-visible {
     font-size: 17px;
 }
 
-.item-menu:hover {
+.menu-link:hover {
     background: var(--painel-hover);
     color: var(--texto);
 }
 
-.item-menu.ativo {
+.menu-link.ativo {
     border-color: var(--roxo);
     background: rgba(185, 160, 245, .17);
     color: var(--roxo-forte);
     font-weight: 700;
 }
 
-.item-menu.ativo > span {
+.menu-link.ativo > span {
     color: var(--roxo-forte);
 }
+
+/* Rodapé da barra lateral */
 
 .rodape-menu {
     margin-top: auto;
@@ -223,6 +239,74 @@ select:focus-visible {
 .botao-sair:hover {
     border-color: var(--vermelho);
     color: var(--vermelho);
+}
+
+/* Responsividade da barra lateral */
+
+@media (max-width: 1250px) {
+    .menu-lateral {
+        width: 245px;
+    }
+
+    .conteudo-principal {
+        margin-left: 245px;
+    }
+}
+
+@media (max-width: 900px) {
+    .menu-lateral {
+        position: static;
+        width: 100%;
+        padding: 15px;
+        border-right: 0;
+        border-bottom: 1px solid var(--borda);
+    }
+
+    .identidade {
+        padding-bottom: 14px;
+    }
+
+    .menu {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 14px 0 4px;
+    }
+
+    .menu-titulo {
+        display: none;
+    }
+
+    .menu-link {
+        min-width: max-content;
+        min-height: 39px;
+        padding: 0 11px;
+        font-size: 11px;
+    }
+
+    .rodape-menu {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 12px;
+        padding-top: 12px;
+    }
+
+    .usuario-resumo {
+        padding: 0;
+    }
+
+    .usuario-informacoes strong {
+        max-width: 190px;
+    }
+
+    .botao-sair {
+        min-width: 120px;
+    }
+
+    .conteudo-principal {
+        margin-left: 0;
+    }
 }
 
 /* Conteúdo principal */
@@ -1021,5 +1105,84 @@ body.tema-claro .fundo-modal {
 
     .rodape-pagina {
         flex-wrap: wrap;
+    }
+}
+
+/* Menu lateral padronizado */
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 25px;
+}
+
+.menu-titulo {
+    margin: 18px 0 8px;
+    padding: 0 12px;
+    color: var(--texto-secundario);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+}
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-height: 49px;
+    padding: 0 13px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    color: var(--texto-secundario);
+    font-size: 12px;
+    font-variant: small-caps;
+    text-decoration: none;
+    transition: .2s ease;
+}
+
+.menu-link > span {
+    display: inline-grid;
+    width: 22px;
+    flex-shrink: 0;
+    place-items: center;
+    color: var(--azul);
+    font-size: 17px;
+}
+
+.menu-link:hover {
+    background: var(--painel-hover);
+    color: var(--texto);
+}
+
+.menu-link.ativo {
+    border-color: var(--roxo);
+    background: rgba(185, 160, 245, .17);
+    color: var(--roxo-forte);
+    font-weight: 700;
+}
+
+.menu-link.ativo > span {
+    color: var(--roxo-forte);
+}
+
+/* Menu em telas menores */
+@media (max-width: 900px) {
+    .menu {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 14px 0 4px;
+    }
+
+    .menu-titulo {
+        display: none;
+    }
+
+    .menu-link {
+        min-width: max-content;
+        min-height: 39px;
+        padding: 0 11px;
+        font-size: 11px;
     }
 }
