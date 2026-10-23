@@ -1,53 +1,55 @@
+
 "use strict";
 
-const API_VEICULOS = "/api/veiculos";
-const API_CLIENTES = "/api/clientes";
-const API_MARCAS = "/api/marcas-veiculo";
-const API_MODELOS = "/api/modelos-veiculo";
+document.addEventListener("DOMContentLoaded", iniciarPaginaVeiculos);
 
-document.addEventListener("DOMContentLoaded", () => {
-    const formulario = document.getElementById("formulario-veiculo");
-    const painelFormulario = document.getElementById("painel-formulario-veiculo");
-    const botaoNovo = document.getElementById("botao-novo-veiculo");
-    const botaoCancelar = document.getElementById("botao-cancelar-veiculo");
-    const botaoSalvar = document.getElementById("botao-salvar-veiculo");
-    const tituloFormulario = document.getElementById("titulo-formulario-veiculo");
-    const campoId = document.getElementById("id-veiculo");
-    const campoPlaca = document.getElementById("placa-veiculo");
-    const campoCor = document.getElementById("cor-veiculo");
-    const campoMarca = document.getElementById("marca-veiculo");
-    const campoModelo = document.getElementById("modelo-veiculo");
-    const campoCliente = document.getElementById("cliente-veiculo");
-    const campoMensalista = document.getElementById("mensalista-veiculo");
-    const campoPesquisa = document.getElementById("pesquisa-veiculos");
-    const listaVeiculos = document.getElementById("lista-veiculos");
-    const mensagemFormulario = document.getElementById("mensagem-formulario-veiculo");
-    const mensagemLista = document.getElementById("mensagem-lista-veiculos");
+function iniciarPaginaVeiculos() {
+    const API_VEICULOS = "/api/veiculos";
+    const API_CLIENTES = "/api/clientes";
+    const API_MARCAS = "/api/marcas-veiculo";
+    const API_MODELOS = "/api/modelos-veiculo";
+    const API_VINCULOS = "/api/vagas-mensalistas";
+    const API_VAGAS = "/api/vagas";
+
+    const elemento = id => document.getElementById(id);
+
+    const painelFormulario = elemento("painel-formulario-veiculo");
+    const formulario = elemento("formulario-veiculo");
+    const lista = elemento("lista-veiculos");
+    const pesquisa = elemento("pesquisa-veiculos");
+
+    const campoId = elemento("id-veiculo");
+    const campoPlaca = elemento("placa-veiculo");
+    const campoCor = elemento("cor-veiculo");
+    const campoMarca = elemento("marca-veiculo");
+    const campoModelo = elemento("modelo-veiculo");
+    const campoCliente = elemento("cliente-veiculo");
+    const campoMensalista = elemento("mensalista-veiculo");
+
+    const tituloFormulario = elemento("titulo-formulario-veiculo");
+    const mensagemFormulario = elemento("mensagem-formulario-veiculo");
+    const mensagemLista = elemento("mensagem-lista-veiculos");
+    const botaoSalvar = elemento("botao-salvar-veiculo");
 
     let veiculos = [];
-    let clientes = [];
     let marcas = [];
     let modelos = [];
-    let carregando = false;
+    let clientes = [];
+    let vinculosMensalistas = [];
+    let vagasMensalistas = [];
 
-    if (!formulario || !painelFormulario || !listaVeiculos) {
-        console.error("Os elementos HTML necessários para a página de veículos não foram encontrados.");
-        return;
-    }
-
-    function mostrarMensagem(elemento, texto, tipo = "") {
-        if (!elemento) return;
-        elemento.textContent = texto;
-        elemento.classList.remove("erro", "sucesso");
-        if (tipo) elemento.classList.add(tipo);
-    }
+    // Guarda o estado do mensalista antes de editar.
+    let mensalistaOriginal = false;
+    let clienteOriginal = null;
 
     async function requisicaoAPI(url, opcoes = {}) {
         const resposta = await fetch(url, {
             credentials: "same-origin",
             ...opcoes,
             headers: {
-                ...(opcoes.body ? { "Content-Type": "application/json" } : {}),
+                ...(opcoes.body
+                    ? { "Content-Type": "application/json" }
+                    : {}),
                 ...opcoes.headers
             }
         });
@@ -64,15 +66,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (!resposta.ok) {
-            const detalhe = dados?.detail || dados?.mensagem || `Erro HTTP ${resposta.status}.`;
-            throw new Error(
-                Array.isArray(detalhe)
-                    ? detalhe.map(item => {
-                        const campo = Array.isArray(item.loc) ? item.loc.slice(1).join(".") : "";
-                        return campo ? `${campo}: ${item.msg || "Dado inválido"}` : item.msg || String(item);
-                    }).join("; ")
-                    : String(detalhe)
-            );
+            let detalhe = dados?.detail ||
+                dados?.mensagem ||
+                `Erro HTTP ${resposta.status}.`;
+
+            if (Array.isArray(detalhe)) {
+                detalhe = detalhe
+                    .map(item => item.msg || String(item))
+                    .join(", ");
+            }
+
+            throw new Error(String(detalhe));
         }
 
         return dados;
@@ -80,419 +84,797 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function obterLista(dados, propriedade) {
         if (Array.isArray(dados)) return dados;
-        const lista = dados?.[propriedade] ?? dados?.items ?? dados?.results ?? [];
-        if (!Array.isArray(lista)) {
-            throw new Error(`A API não retornou uma lista válida de ${propriedade}.`);
+        if (Array.isArray(dados?.[propriedade])) {
+            return dados[propriedade];
         }
-        return lista;
+        if (Array.isArray(dados?.items)) return dados.items;
+        if (Array.isArray(dados?.results)) return dados.results;
+        return [];
     }
 
-    function obterId(item) {
-        return item.id_veiculo ?? item.id_marca ?? item.id_modelo ?? item.id_clients ?? item.id_cliente ?? item.id;
+    function idCliente(cliente) {
+        return cliente?.id_clients ??
+            cliente?.id_cliente ??
+            cliente?.id;
     }
 
-    function obterPlaca(veiculo) {
-        return veiculo.placa ?? veiculo.placa_veiculo ?? "";
+    function nomeCliente(cliente) {
+        return cliente?.nome_completo ??
+            cliente?.nome_cliente ??
+            cliente?.nome ??
+            "—";
     }
 
-    function obterCor(veiculo) {
-        return veiculo.cor ?? veiculo.cor_veiculo ?? "";
+    function idModeloVeiculo(veiculo) {
+        return veiculo.id_modelo ??
+            veiculo.id_modelo_veiculo ??
+            veiculo.modelo_id ??
+            veiculo.modelo?.id_modelo ??
+            veiculo.modelo?.id;
     }
 
-    function obterMarcaId(veiculo) {
-        return veiculo.id_marca ?? veiculo.id_marca_veiculo ?? veiculo.marca_id ?? veiculo.marca?.id_marca ?? veiculo.marca?.id;
+    function obterModelo(veiculo) {
+        if (veiculo.modelo && typeof veiculo.modelo === "object") {
+            return veiculo.modelo;
+        }
+
+        const id = idModeloVeiculo(veiculo);
+
+        return modelos.find(modelo =>
+            String(modelo.id_modelo ?? modelo.id) === String(id)
+        );
     }
 
-    function obterModeloId(veiculo) {
-        return veiculo.id_modelo ?? veiculo.id_modelo_veiculo ?? veiculo.modelo_id ?? veiculo.modelo?.id_modelo ?? veiculo.modelo?.id;
+    function obterMarca(veiculo) {
+        const modelo = obterModelo(veiculo);
+
+        if (modelo?.marca && typeof modelo.marca === "object") {
+            return modelo.marca;
+        }
+
+        if (veiculo.marca && typeof veiculo.marca === "object") {
+            return veiculo.marca;
+        }
+
+        const id = modelo?.id_marca ??
+            modelo?.id_marca_veiculo ??
+            veiculo.id_marca ??
+            veiculo.id_marca_veiculo ??
+            veiculo.marca_id ??
+            veiculo.marca?.id_marca ??
+            veiculo.marca?.id;
+
+        return marcas.find(marca =>
+            String(marca.id_marca ?? marca.id) === String(id)
+        );
     }
 
-    function obterClienteId(veiculo) {
-        return veiculo.id_clients ?? veiculo.id_cliente ?? veiculo.cliente_id ?? veiculo.cliente?.id_clients ?? veiculo.cliente?.id_cliente ?? veiculo.cliente?.id;
+    function nomeModelo(veiculo) {
+        const modelo = obterModelo(veiculo);
+
+        return modelo?.nome_modelo ??
+            modelo?.nome ??
+            modelo?.descricao ??
+            veiculo.nome_modelo ??
+            veiculo.modelo_nome ??
+            (typeof veiculo.modelo === "string"
+                ? veiculo.modelo
+                : null) ??
+            "—";
     }
 
-    function obterNome(item) {
-        return item.nome_completo ?? item.nome ?? item.nome_cliente ?? item.nome_marca ?? item.nome_modelo ?? item.descricao ?? "";
+    function nomeMarca(veiculo) {
+        const marca = obterMarca(veiculo);
+
+        return marca?.nome_marca ??
+            marca?.nome ??
+            marca?.descricao ??
+            veiculo.nome_marca ??
+            veiculo.marca_nome ??
+            (typeof veiculo.marca === "string"
+                ? veiculo.marca
+                : null) ??
+            "—";
     }
 
-    function obterNomeMarca(veiculo) {
-        if (veiculo.marca && typeof veiculo.marca === "object") return obterNome(veiculo.marca);
-        const marca = marcas.find(item => String(obterId(item)) === String(obterMarcaId(veiculo)));
-        return marca ? obterNome(marca) : veiculo.nome_marca ?? veiculo.marca_nome ?? (typeof veiculo.marca === "string" ? veiculo.marca : "");
+    function idResponsavel(veiculo) {
+        return veiculo.id_clients ??
+            veiculo.id_cliente ??
+            veiculo.cliente_id ??
+            veiculo.cliente?.id_clients ??
+            veiculo.cliente?.id_cliente ??
+            veiculo.clients?.id_clients;
     }
 
-    function obterNomeModelo(veiculo) {
-        if (veiculo.modelo && typeof veiculo.modelo === "object") return obterNome(veiculo.modelo);
-        const modelo = modelos.find(item => String(obterId(item)) === String(obterModeloId(veiculo)));
-        return modelo ? obterNome(modelo) : veiculo.nome_modelo ?? veiculo.modelo_nome ?? (typeof veiculo.modelo === "string" ? veiculo.modelo : "");
+    function nomeResponsavel(veiculo) {
+        const id = idResponsavel(veiculo);
+
+        const cliente = clientes.find(item =>
+            String(idCliente(item)) === String(id)
+        );
+
+        if (cliente) return nomeCliente(cliente);
+
+        if (veiculo.cliente && typeof veiculo.cliente === "object") {
+            return nomeCliente(veiculo.cliente);
+        }
+
+        if (veiculo.clients && typeof veiculo.clients === "object") {
+            return nomeCliente(veiculo.clients);
+        }
+
+        return veiculo.nome_cliente ?? "—";
     }
 
-    function obterNomeCliente(veiculo) {
-        if (veiculo.cliente && typeof veiculo.cliente === "object") return obterNome(veiculo.cliente);
-        const cliente = clientes.find(item => String(obterId(item)) === String(obterClienteId(veiculo)));
-        return cliente ? obterNome(cliente) : veiculo.nome_cliente ?? veiculo.cliente_nome ?? "";
+    function dataHojeISO() {
+        const hoje = new Date();
+
+        return [
+            hoje.getFullYear(),
+            String(hoje.getMonth() + 1).padStart(2, "0"),
+            String(hoje.getDate()).padStart(2, "0")
+        ].join("-");
     }
 
-    function ehMensalista(veiculo) {
-        const valor = veiculo.mensalista ?? veiculo.eh_mensalista ?? veiculo.is_mensalista ?? veiculo.tem_mensalidade;
-        if (typeof valor === "boolean") return valor;
-        if (typeof valor === "number") return valor === 1;
-        if (typeof valor === "string") return ["sim", "true", "1", "ativo"].includes(valor.toLowerCase());
-        return Boolean(veiculo.id_mensalista ?? veiculo.mensalista_id);
+    function vinculoEstaAtivo(vinculo, hoje = dataHojeISO()) {
+        const inicio = String(vinculo.data_inicio ?? "").slice(0, 10);
+        const fim = vinculo.data_fim
+            ? String(vinculo.data_fim).slice(0, 10)
+            : null;
+
+        return inicio !== "" &&
+            inicio <= hoje &&
+            (fim === null || fim >= hoje);
     }
 
-    function veiculoAtivo(veiculo) {
-        if (veiculo.ativo === undefined && veiculo.status === undefined) return true;
-        return veiculo.ativo === true || veiculo.ativo === 1 || veiculo.status === "ATIVO" || veiculo.status === "ativo";
+    function obterVinculoAtivo(idClients) {
+        if (idClients == null) return null;
+
+        return vinculosMensalistas.find(vinculo =>
+            String(vinculo.id_clients) === String(idClients) &&
+            vinculoEstaAtivo(vinculo)
+        ) ?? null;
     }
 
-    function criarCelula(texto) {
-        const celula = document.createElement("td");
-        celula.textContent = texto || "—";
-        return celula;
+    function clienteEhMensalista(idClients) {
+        return obterVinculoAtivo(idClients) !== null;
     }
 
-    function criarBotaoAcao(texto, classe, acao, id, rotulo) {
+    function mostrarMensagem(texto, tipo = "") {
+        if (!mensagemFormulario) return;
+
+        mensagemFormulario.textContent = texto;
+        mensagemFormulario.className = "mensagem-formulario-veiculo";
+
+        if (tipo) mensagemFormulario.classList.add(tipo);
+    }
+
+    function mostrarMensagemLista(texto, tipo = "") {
+        if (!mensagemLista) return;
+
+        mensagemLista.textContent = texto;
+        mensagemLista.className = "mensagem-lista-veiculos";
+
+        if (tipo) mensagemLista.classList.add(tipo);
+    }
+
+    function criarCelula(valor) {
+        const td = document.createElement("td");
+        td.textContent = valor == null || valor === ""
+            ? "—"
+            : String(valor);
+        return td;
+    }
+
+    function criarSituacao(texto, classe) {
+        const span = document.createElement("span");
+        span.className = `situacao-veiculo ${classe}`;
+        span.textContent = texto;
+        return span;
+    }
+
+    function criarBotaoAcao(texto, classe, callback, veiculo) {
         const botao = document.createElement("button");
         botao.type = "button";
         botao.className = `botao-acao-veiculo ${classe}`.trim();
         botao.textContent = texto;
-        botao.setAttribute("aria-label", rotulo);
-        botao.addEventListener("click", () => acao(id));
+        botao.addEventListener("click", () => callback(veiculo));
         return botao;
     }
 
-    function criarOpcao(valor, texto) {
-        const opcao = document.createElement("option");
-        opcao.value = valor ?? "";
-        opcao.textContent = texto;
-        return opcao;
-    }
-
-    function preencherSelect(campo, itens, textoInicial, selecionado = "") {
-        campo.replaceChildren(criarOpcao("", textoInicial));
-
-        itens.forEach(item => {
-            campo.appendChild(criarOpcao(obterId(item), obterNome(item)));
-        });
-
-        campo.value = selecionado == null ? "" : String(selecionado);
-    }
-
-    async function carregarClientes() {
-        try {
-            clientes = obterLista(await requisicaoAPI(API_CLIENTES), "clientes");
-            preencherSelect(campoCliente, clientes, "Selecione o cliente");
-        } catch (erro) {
-            console.error("Erro ao carregar clientes:", erro);
-            clientes = [];
-            preencherSelect(campoCliente, [], "Não foi possível carregar os clientes");
-            mostrarMensagem(mensagemFormulario, "Não foi possível carregar os clientes. Verifique a API de clientes.", "erro");
-        }
-    }
-
-    async function carregarMarcas() {
-        try {
-            marcas = obterLista(await requisicaoAPI(API_MARCAS), "marcas");
-            preencherSelect(campoMarca, marcas, "Selecione a marca");
-        } catch (erro) {
-            console.error("Erro ao carregar marcas:", erro);
-            marcas = [];
-            preencherSelect(campoMarca, [], "Não foi possível carregar as marcas");
-            mostrarMensagem(mensagemFormulario, "Não foi possível carregar as marcas. Confira a rota da API de marcas.", "erro");
-        }
-    }
-
-    async function carregarModelos(idMarca, idSelecionado = "") {
-        campoModelo.disabled = true;
-        preencherSelect(campoModelo, [], idMarca ? "Carregando modelos..." : "Selecione primeiro a marca");
-
-        if (!idMarca) return;
-
-        try {
-            const dados = await requisicaoAPI(API_MODELOS);
-            const todosModelos = obterLista(dados, "modelos");
-
-            modelos = todosModelos.filter(modelo =>
-                String(modelo.id_marca) === String(idMarca) &&
-                modelo.ativo !== false &&
-                modelo.ativo !== 0
-            );
-
-            preencherSelect(campoModelo, modelos, "Selecione o modelo", idSelecionado);
-            campoModelo.disabled = modelos.length === 0;
-
-            if (modelos.length === 0) {
-                preencherSelect(campoModelo, [], "Nenhum modelo disponível");
-            }
-        } catch (erro) {
-            console.error("Erro ao carregar modelos:", erro);
-            modelos = [];
-            preencherSelect(campoModelo, [], "Erro ao carregar modelos");
-            mostrarMensagem(mensagemFormulario, "Não foi possível carregar os modelos da marca selecionada.", "erro");
-        }
-    }
-
     function renderizarVeiculos() {
-        const pesquisa = (campoPesquisa?.value || "").trim().toLocaleLowerCase("pt-BR");
+        if (!lista) return;
 
-        const filtrados = veiculos.filter(veiculo => {
-            const conteudo = [
-                obterPlaca(veiculo),
-                obterCor(veiculo),
-                obterNomeMarca(veiculo),
-                obterNomeModelo(veiculo),
-                obterNomeCliente(veiculo),
-                ehMensalista(veiculo) ? "mensalista sim" : "mensalista não"
-            ].join(" ").toLocaleLowerCase("pt-BR");
+        const termo = (pesquisa?.value || "")
+            .trim()
+            .toLocaleLowerCase("pt-BR");
 
-            return conteudo.includes(pesquisa);
-        });
+        const filtrados = veiculos.filter(veiculo => [
+            veiculo.placa,
+            veiculo.cor,
+            nomeMarca(veiculo),
+            nomeModelo(veiculo),
+            nomeResponsavel(veiculo)
+        ].some(valor =>
+            String(valor ?? "")
+                .toLocaleLowerCase("pt-BR")
+                .includes(termo)
+        ));
 
-        listaVeiculos.replaceChildren();
+        lista.replaceChildren();
 
         if (filtrados.length === 0) {
-            const linha = document.createElement("tr");
-            const celula = document.createElement("td");
-            const icone = document.createElement("span");
-            const titulo = document.createElement("strong");
-            const descricao = document.createElement("span");
+            const tr = document.createElement("tr");
+            const td = document.createElement("td");
+            td.colSpan = 7;
+            td.className = "mensagem-vazia";
 
-            celula.colSpan = 7;
-            celula.className = "mensagem-vazia";
+            const icone = document.createElement("span");
             icone.className = "mensagem-vazia-icone";
             icone.setAttribute("aria-hidden", "true");
             icone.textContent = "🚗";
-            titulo.textContent = pesquisa ? "Nenhum veículo encontrado" : "Nenhum veículo cadastrado";
-            descricao.textContent = pesquisa ? "Tente pesquisar usando outros termos." : "Clique em “Novo veículo” para cadastrar o primeiro.";
 
-            celula.append(icone, titulo, descricao);
-            linha.appendChild(celula);
-            listaVeiculos.appendChild(linha);
+            const titulo = document.createElement("strong");
+            titulo.textContent = termo
+                ? "Nenhum veículo encontrado"
+                : "Nenhum veículo cadastrado";
+
+            const descricao = document.createElement("span");
+            descricao.textContent = termo
+                ? "Tente pesquisar por outra placa, marca ou modelo."
+                : "Cadastre um veículo para começar.";
+
+            td.append(icone, titulo, descricao);
+            tr.appendChild(td);
+            lista.appendChild(tr);
             return;
         }
 
         filtrados.forEach(veiculo => {
-            const linha = document.createElement("tr");
-            const id = obterId(veiculo);
+            const tr = document.createElement("tr");
 
-            linha.appendChild(criarCelula(obterPlaca(veiculo)));
-            linha.appendChild(criarCelula(obterNomeMarca(veiculo)));
-            linha.appendChild(criarCelula(obterNomeModelo(veiculo)));
-            linha.appendChild(criarCelula(obterCor(veiculo)));
-            linha.appendChild(criarCelula(obterNomeCliente(veiculo)));
+            tr.appendChild(criarCelula(veiculo.placa));
+            tr.appendChild(criarCelula(nomeMarca(veiculo)));
+            tr.appendChild(criarCelula(nomeModelo(veiculo)));
+            tr.appendChild(criarCelula(veiculo.cor));
+            tr.appendChild(criarCelula(nomeResponsavel(veiculo)));
 
-            const celulaMensalista = document.createElement("td");
-            const etiquetaMensalista = document.createElement("span");
-            const mensalista = ehMensalista(veiculo);
+            const mensalista = clienteEhMensalista(
+                idResponsavel(veiculo)
+            );
 
-            etiquetaMensalista.className = `situacao-veiculo ${mensalista ? "mensalista" : "nao-mensalista"}`;
-            etiquetaMensalista.textContent = mensalista ? "Sim" : "Não";
-            celulaMensalista.appendChild(etiquetaMensalista);
-            linha.appendChild(celulaMensalista);
+            const tdMensalista = document.createElement("td");
+            tdMensalista.appendChild(
+                criarSituacao(
+                    mensalista ? "Sim" : "Não",
+                    mensalista ? "mensalista" : "nao-mensalista"
+                )
+            );
+            tr.appendChild(tdMensalista);
 
-            const celulaAcoes = document.createElement("td");
+            const tdAcoes = document.createElement("td");
             const acoes = document.createElement("div");
             acoes.className = "acoes-veiculo";
 
-            acoes.appendChild(criarBotaoAcao(
-                "Editar",
-                "",
-                editarVeiculo,
-                id,
-                `Editar veículo ${obterPlaca(veiculo)}`
-            ));
+            acoes.appendChild(
+                criarBotaoAcao("Editar", "", abrirEdicao, veiculo)
+            );
 
-            if (veiculoAtivo(veiculo)) {
-                acoes.appendChild(criarBotaoAcao(
-                    "Desativar",
-                    "excluir",
-                    desativarVeiculo,
-                    id,
-                    `Desativar veículo ${obterPlaca(veiculo)}`
-                ));
-            }
+            acoes.appendChild(
+                criarBotaoAcao("Excluir", "excluir", excluirVeiculo, veiculo)
+            );
 
-            celulaAcoes.appendChild(acoes);
-            linha.appendChild(celulaAcoes);
-            listaVeiculos.appendChild(linha);
+            tdAcoes.appendChild(acoes);
+            tr.appendChild(tdAcoes);
+            lista.appendChild(tr);
         });
     }
 
-    async function carregarVeiculos() {
-        if (carregando) return;
-
-        carregando = true;
-        listaVeiculos.innerHTML = `
-            <tr>
-                <td colspan="7" class="mensagem-vazia">
-                    <strong>Carregando veículos...</strong>
-                    <span>Aguarde enquanto consultamos os cadastros.</span>
-                </td>
-            </tr>
-        `;
-        mostrarMensagem(mensagemLista, "");
+    async function carregarTudo() {
+        if (lista) {
+            lista.innerHTML = `
+                <tr>
+                    <td colspan="7" class="mensagem-vazia">
+                        <span class="mensagem-vazia-icone" aria-hidden="true">🚗</span>
+                        <strong>Carregando veículos...</strong>
+                        <span>Aguarde enquanto consultamos os cadastros.</span>
+                    </td>
+                </tr>`;
+        }
 
         try {
-            const dados = await requisicaoAPI(API_VEICULOS);
-            veiculos = obterLista(dados, "veiculos");
+            const [
+                dadosVeiculos,
+                dadosMarcas,
+                dadosModelos,
+                dadosClientes
+            ] = await Promise.all([
+                requisicaoAPI(API_VEICULOS),
+                requisicaoAPI(API_MARCAS),
+                requisicaoAPI(API_MODELOS),
+                requisicaoAPI(API_CLIENTES)
+            ]);
+
+            veiculos = obterLista(dadosVeiculos, "veiculos");
+            marcas = obterLista(dadosMarcas, "marcas");
+            modelos = obterLista(dadosModelos, "modelos");
+            clientes = obterLista(dadosClientes, "clientes");
+
+            try {
+                const dadosVinculos = await requisicaoAPI(
+                    `${API_VINCULOS}?incluir_encerrados=true`
+                );
+
+                vinculosMensalistas = obterLista(
+                    dadosVinculos,
+                    "vinculos"
+                );
+            } catch (erro) {
+                console.error(
+                    "Erro ao carregar vínculos mensalistas:",
+                    erro
+                );
+                throw new Error(
+                    "Não foi possível consultar os vínculos mensalistas. " +
+                    erro.message
+                );
+            }
+
             renderizarVeiculos();
         } catch (erro) {
             console.error("Erro ao carregar veículos:", erro);
-            listaVeiculos.innerHTML = `
-                <tr>
-                    <td colspan="7" class="mensagem-vazia">
-                        <strong>Não foi possível carregar os veículos.</strong>
-                        <span>Verifique a conexão com o servidor e as rotas da API.</span>
-                    </td>
-                </tr>
-            `;
-            mostrarMensagem(mensagemLista, erro.message, "erro");
-        } finally {
-            carregando = false;
+            mostrarMensagemLista(erro.message, "erro");
+
+            if (lista) {
+                lista.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="mensagem-vazia">
+                            <strong>Não foi possível carregar os veículos.</strong>
+                            <span>Verifique a conexão com o servidor e tente novamente.</span>
+                        </td>
+                    </tr>`;
+            }
         }
     }
 
-    async function abrirFormulario(veiculo = null) {
-        formulario.reset();
-        campoId.value = veiculo ? String(obterId(veiculo) ?? "") : "";
-        mostrarMensagem(mensagemFormulario, "");
+    async function carregarClientes(idSelecionado = null) {
+        const dados = await requisicaoAPI(API_CLIENTES);
+        clientes = obterLista(dados, "clientes");
 
-        await Promise.all([carregarClientes(), carregarMarcas()]);
+        campoCliente.replaceChildren();
 
-        if (veiculo) {
-            campoPlaca.value = obterPlaca(veiculo);
-            campoCor.value = obterCor(veiculo);
-            campoCliente.value = String(obterClienteId(veiculo) ?? "");
-            campoMensalista.value = ehMensalista(veiculo) ? "sim" : "nao";
+        const inicial = document.createElement("option");
+        inicial.value = "";
+        inicial.textContent = "Selecione o cliente";
+        campoCliente.appendChild(inicial);
 
-            const idMarca = obterMarcaId(veiculo);
-            campoMarca.value = String(idMarca ?? "");
-            await carregarModelos(idMarca, obterModeloId(veiculo));
+        clientes.forEach(cliente => {
+            const id = idCliente(cliente);
+            if (id == null) return;
 
-            tituloFormulario.textContent = "Editar veículo";
-            botaoSalvar.textContent = "Salvar alterações";
-        } else {
-            tituloFormulario.textContent = "Cadastrar veículo";
-            botaoSalvar.textContent = "Salvar veículo";
-            campoModelo.disabled = true;
+            const opcao = document.createElement("option");
+            opcao.value = String(id);
+            opcao.textContent = nomeCliente(cliente);
+            campoCliente.appendChild(opcao);
+        });
+
+        if (idSelecionado != null) {
+            campoCliente.value = String(idSelecionado);
+
+            if (campoCliente.value !== String(idSelecionado)) {
+                throw new Error(
+                    `O cliente ID ${idSelecionado} não foi encontrado na lista.`
+                );
+            }
         }
+    }
+
+    async function carregarMarcas(idSelecionado = null) {
+        const dados = await requisicaoAPI(API_MARCAS);
+        marcas = obterLista(dados, "marcas");
+
+        campoMarca.replaceChildren();
+
+        const inicial = document.createElement("option");
+        inicial.value = "";
+        inicial.textContent = "Selecione a marca";
+        campoMarca.appendChild(inicial);
+
+        marcas
+            .filter(marca => marca.ativo !== false && marca.ativo !== 0)
+            .forEach(marca => {
+                const option = document.createElement("option");
+                option.value = marca.id_marca ?? marca.id;
+                option.textContent = marca.nome_marca ?? marca.nome;
+                campoMarca.appendChild(option);
+            });
+
+        if (idSelecionado != null) {
+            campoMarca.value = String(idSelecionado);
+        }
+    }
+
+    async function carregarModelos(idMarca, idSelecionado = null) {
+        campoModelo.replaceChildren();
+
+        const inicial = document.createElement("option");
+        inicial.value = "";
+        inicial.textContent = idMarca
+            ? "Selecione o modelo"
+            : "Selecione primeiro a marca";
+
+        campoModelo.appendChild(inicial);
+        campoModelo.disabled = !idMarca;
+
+        if (!idMarca) return;
+
+        const dados = await requisicaoAPI(API_MODELOS);
+        modelos = obterLista(dados, "modelos");
+
+        modelos
+            .filter(modelo => {
+                const idDaMarca = modelo.id_marca ??
+                    modelo.id_marca_veiculo ??
+                    modelo.marca_id;
+
+                return String(idDaMarca) === String(idMarca) &&
+                    modelo.ativo !== false &&
+                    modelo.ativo !== 0;
+            })
+            .forEach(modelo => {
+                const option = document.createElement("option");
+                option.value = modelo.id_modelo ?? modelo.id;
+                option.textContent = modelo.nome_modelo ??
+                    modelo.nome ??
+                    modelo.descricao;
+
+                campoModelo.appendChild(option);
+            });
+
+        campoModelo.disabled = false;
+
+        if (idSelecionado != null) {
+            campoModelo.value = String(idSelecionado);
+        }
+    }
+
+    async function abrirNovoVeiculo() {
+        formulario.reset();
+        campoId.value = "";
+        mensalistaOriginal = false;
+        clienteOriginal = null;
+
+        tituloFormulario.textContent = "Cadastrar veículo";
+        botaoSalvar.textContent = "Salvar veículo";
+        mostrarMensagem("");
+        campoModelo.disabled = true;
 
         painelFormulario.hidden = false;
-        campoPlaca.focus();
-        painelFormulario.scrollIntoView({ behavior: "smooth", block: "start" });
+        painelFormulario.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+        try {
+            await Promise.all([
+                carregarClientes(),
+                carregarMarcas()
+            ]);
+
+            await carregarModelos("");
+        } catch (erro) {
+            mostrarMensagem(
+                `Erro ao carregar os dados: ${erro.message}`,
+                "erro"
+            );
+        }
+    }
+
+    async function abrirEdicao(veiculo) {
+        mostrarMensagem("");
+        formulario.reset();
+
+        campoId.value = veiculo.id_veiculo ?? veiculo.id ?? "";
+        campoPlaca.value = veiculo.placa ?? "";
+        campoCor.value = veiculo.cor ?? "";
+
+        const modelo = obterModelo(veiculo);
+        const marca = obterMarca(veiculo);
+
+        const idMarca = marca?.id_marca ??
+            marca?.id ??
+            modelo?.id_marca ??
+            modelo?.id_marca_veiculo ??
+            veiculo.id_marca;
+
+        const idModelo = idModeloVeiculo(veiculo);
+        const idDoCliente = idResponsavel(veiculo);
+
+        clienteOriginal = idDoCliente;
+        mensalistaOriginal = clienteEhMensalista(idDoCliente);
+
+        tituloFormulario.textContent = "Editar veículo";
+        botaoSalvar.textContent = "Salvar alterações";
+        painelFormulario.hidden = false;
+        painelFormulario.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+        try {
+            await Promise.all([
+                carregarClientes(idDoCliente),
+                carregarMarcas(idMarca)
+            ]);
+
+            if (idMarca != null) {
+                await carregarModelos(idMarca, idModelo);
+            } else {
+                await carregarModelos("");
+            }
+
+            campoMensalista.value = mensalistaOriginal ? "sim" : "nao";
+        } catch (erro) {
+            console.error("Erro ao abrir edição:", erro);
+            mostrarMensagem(
+                `Não foi possível carregar os dados para edição: ${erro.message}`,
+                "erro"
+            );
+        }
     }
 
     function fecharFormulario() {
+        painelFormulario.hidden = true;
         formulario.reset();
         campoId.value = "";
         campoModelo.disabled = true;
-        painelFormulario.hidden = true;
-        mostrarMensagem(mensagemFormulario, "");
+        mensalistaOriginal = false;
+        clienteOriginal = null;
+        tituloFormulario.textContent = "Cadastrar veículo";
+        botaoSalvar.textContent = "Salvar veículo";
+        mostrarMensagem("");
     }
 
-    function editarVeiculo(id) {
-        const veiculo = veiculos.find(item => String(obterId(item)) === String(id));
+    async function carregarVagasMensalistas() {
+        // A rota /api/vagas é uma suposição comum, mas deve existir
+        // no backend para permitir encontrar uma vaga disponível.
+        const dados = await requisicaoAPI(API_VAGAS);
+        const vagas = obterLista(dados, "vagas");
 
-        if (!veiculo) {
-            mostrarMensagem(mensagemLista, "O veículo selecionado não foi encontrado.", "erro");
+        return vagas.filter(vaga => {
+            const tipo = String(
+                vaga.tipo ?? vaga.tipo_vaga ?? ""
+            ).toUpperCase();
+
+            const statusVaga = String(
+                vaga.status ?? ""
+            ).toUpperCase();
+
+            return tipo.includes("MENSALISTA") &&
+                statusVaga.includes("ATIVA");
+        });
+    }
+
+    async function sincronizarMensalista(idClients, desejaSerMensalista) {
+        const hoje = dataHojeISO();
+
+        const dados = await requisicaoAPI(
+            `${API_VINCULOS}?incluir_encerrados=true`
+        );
+
+        const vinculos = obterLista(dados, "vinculos")
+            .filter(v => String(v.id_clients) === String(idClients));
+
+        const ativo = vinculos.find(v => vinculoEstaAtivo(v, hoje));
+
+        if (desejaSerMensalista && ativo) return;
+        if (!desejaSerMensalista && !ativo) return;
+
+        if (!desejaSerMensalista && ativo) {
+            await requisicaoAPI(
+                `${API_VINCULOS}/${encodeURIComponent(ativo.id_vinculo)}/encerrar?data_fim=${hoje}`,
+                { method: "PATCH" }
+            );
             return;
         }
 
-        abrirFormulario(veiculo);
+        // Reutiliza a vaga de um vínculo anterior, se houver.
+        const anterior = [...vinculos]
+            .filter(v => v.id_vaga != null)
+            .sort((a, b) =>
+                String(b.data_inicio).localeCompare(String(a.data_inicio))
+            )[0];
+
+        let idVaga = anterior?.id_vaga;
+
+        if (idVaga == null) {
+            const vagas = await carregarVagasMensalistas();
+
+            const ocupadas = new Set(
+                vinculosMensalistas
+                    .filter(v => vinculoEstaAtivo(v, hoje))
+                    .map(v => String(v.id_vaga))
+            );
+
+            const vagaDisponivel = vagas.find(vaga => {
+                const id = vaga.id_vaga ?? vaga.id;
+                return id != null && !ocupadas.has(String(id));
+            });
+
+            idVaga = vagaDisponivel?.id_vaga ?? vagaDisponivel?.id;
+        }
+
+        if (idVaga == null) {
+            throw new Error(
+                "Não há vaga mensalista disponível para vincular este cliente. " +
+                "Cadastre ou libere uma vaga mensalista ativa e tente novamente."
+            );
+        }
+
+        await requisicaoAPI(API_VINCULOS, {
+            method: "POST",
+            body: JSON.stringify({
+                id_clients: Number(idClients),
+                id_vaga: Number(idVaga),
+                data_inicio: hoje,
+                data_fim: null
+            })
+        });
     }
 
     async function salvarVeiculo(evento) {
         evento.preventDefault();
+        mostrarMensagem("");
 
-        const placa = campoPlaca.value.trim().toUpperCase();
-        const cor = campoCor.value;
-        const idModelo = campoModelo.value;
-        const idCliente = campoCliente.value;
+        if (!formulario.reportValidity()) return;
+
         const id = campoId.value.trim();
+        const idClienteSelecionado = Number(campoCliente.value);
+        const desejaSerMensalista = campoMensalista.value === "sim";
 
-        if (!placa || !cor || !idModelo || !idCliente) {
-            mostrarMensagem(mensagemFormulario, "Preencha a placa, a cor, o modelo e o cliente responsável.", "erro");
-            return;
-        }
-
-        if (!/^[A-Z]{3}(?:[0-9]{4}|[0-9][A-Z0-9][0-9]{2})$/.test(placa)) {
-            mostrarMensagem(mensagemFormulario, "Informe uma placa válida. Exemplos: ABC1234 ou ABC1D23.", "erro");
-            campoPlaca.focus();
+        if (!idClienteSelecionado) {
+            mostrarMensagem("Selecione o cliente responsável.", "erro");
             return;
         }
 
         const dados = {
-            id_clients: Number(idCliente),
-            id_modelo: Number(idModelo),
-            placa,
-            cor
+            id_clients: idClienteSelecionado,
+            id_modelo: Number(campoModelo.value),
+            placa: campoPlaca.value.trim().toUpperCase(),
+            cor: campoCor.value
         };
 
-        const editando = Boolean(id);
-        const url = editando ? `${API_VEICULOS}/${encodeURIComponent(id)}` : API_VEICULOS;
-
         botaoSalvar.disabled = true;
-        botaoSalvar.textContent = editando ? "Salvando..." : "Cadastrando...";
-        mostrarMensagem(mensagemFormulario, "");
+        botaoSalvar.textContent = "Salvando...";
 
         try {
-            await requisicaoAPI(url, {
-                method: editando ? "PUT" : "POST",
-                body: JSON.stringify(dados)
-            });
-
-            fecharFormulario();
-            mostrarMensagem(
-                mensagemLista,
-                editando ? "Veículo atualizado com sucesso." : "Veículo cadastrado com sucesso.",
-                "sucesso"
+            // Salva primeiro os dados do veículo.
+            await requisicaoAPI(
+                id
+                    ? `${API_VEICULOS}/${encodeURIComponent(id)}`
+                    : API_VEICULOS,
+                {
+                    method: id ? "PUT" : "POST",
+                    body: JSON.stringify(dados)
+                }
             );
 
-            await carregarVeiculos();
+            // Se o cliente mudou, o vínculo do cliente anterior
+            // não deve ser encerrado automaticamente, pois pode
+            // haver outros veículos associados a ele.
+            if (
+                clienteOriginal != null &&
+                String(clienteOriginal) !== String(idClienteSelecionado)
+            ) {
+                const novoClienteJaMensalista =
+                    clienteEhMensalista(idClienteSelecionado);
+
+                if (desejaSerMensalista && !novoClienteJaMensalista) {
+                    await sincronizarMensalista(
+                        idClienteSelecionado,
+                        true
+                    );
+                }
+            } else {
+                await sincronizarMensalista(
+                    idClienteSelecionado,
+                    desejaSerMensalista
+                );
+            }
+
+            fecharFormulario();
+            await carregarTudo();
+
+            mostrarMensagemLista(
+                id
+                    ? "Veículo e vínculo mensalista atualizados com sucesso."
+                    : "Veículo cadastrado com sucesso.",
+                "sucesso"
+            );
         } catch (erro) {
             console.error("Erro ao salvar veículo:", erro);
-            mostrarMensagem(mensagemFormulario, erro.message || "Não foi possível salvar o veículo.", "erro");
+            mostrarMensagem(
+                erro.message || "Não foi possível salvar os dados.",
+                "erro"
+            );
+
+            try {
+                await carregarTudo();
+            } catch (erroAtualizacao) {
+                console.error(
+                    "Erro ao atualizar a lista:",
+                    erroAtualizacao
+                );
+            }
         } finally {
             botaoSalvar.disabled = false;
-            botaoSalvar.textContent = campoId.value ? "Salvar alterações" : "Salvar veículo";
+            botaoSalvar.textContent = campoId.value
+                ? "Salvar alterações"
+                : "Salvar veículo";
         }
     }
 
-    async function desativarVeiculo(id) {
-        const veiculo = veiculos.find(item => String(obterId(item)) === String(id));
+    async function excluirVeiculo(veiculo) {
+        const id = veiculo.id_veiculo ?? veiculo.id;
 
-        if (!veiculo) {
-            mostrarMensagem(mensagemLista, "O veículo selecionado não foi encontrado.", "erro");
+        if (!id) {
+            mostrarMensagemLista(
+                "Não foi possível identificar o veículo.",
+                "erro"
+            );
             return;
         }
 
-        const confirmado = window.confirm(`Deseja realmente desativar o veículo "${obterPlaca(veiculo)}"?`);
+        const confirmado = confirm(
+            `Deseja realmente excluir o veículo ${veiculo.placa ?? ""}?`
+        );
+
         if (!confirmado) return;
 
-        mostrarMensagem(mensagemLista, "");
-
         try {
-            await requisicaoAPI(`${API_VEICULOS}/${encodeURIComponent(id)}`, {
-                method: "DELETE"
-            });
+            await requisicaoAPI(
+                `${API_VEICULOS}/${encodeURIComponent(id)}`,
+                { method: "DELETE" }
+            );
 
-            mostrarMensagem(mensagemLista, "Veículo desativado com sucesso.", "sucesso");
-            await carregarVeiculos();
+            await carregarTudo();
+
+            mostrarMensagemLista(
+                "Veículo desativado com sucesso.",
+                "sucesso"
+            );
         } catch (erro) {
-            console.error("Erro ao desativar veículo:", erro);
-            mostrarMensagem(mensagemLista, erro.message || "Não foi possível desativar o veículo.", "erro");
+            console.error("Erro ao excluir veículo:", erro);
+            mostrarMensagemLista(
+                erro.message || "Não foi possível excluir o veículo.",
+                "erro"
+            );
         }
     }
 
-    botaoNovo?.addEventListener("click", () => abrirFormulario());
-    botaoCancelar?.addEventListener("click", fecharFormulario);
-    formulario.addEventListener("submit", salvarVeiculo);
-    campoPesquisa?.addEventListener("input", renderizarVeiculos);
+    elemento("botao-novo-veiculo")?.addEventListener(
+        "click",
+        abrirNovoVeiculo
+    );
 
-    campoMarca?.addEventListener("change", () => {
-        carregarModelos(campoMarca.value);
+    elemento("botao-cancelar-veiculo")?.addEventListener(
+        "click",
+        fecharFormulario
+    );
+
+    formulario?.addEventListener("submit", salvarVeiculo);
+    pesquisa?.addEventListener("input", renderizarVeiculos);
+
+    campoMarca?.addEventListener("change", async () => {
+        try {
+            await carregarModelos(campoMarca.value);
+        } catch (erro) {
+            mostrarMensagem(
+                `Erro ao carregar modelos: ${erro.message}`,
+                "erro"
+            );
+        }
     });
 
-    carregarVeiculos();
-});
+    carregarTudo();
+}

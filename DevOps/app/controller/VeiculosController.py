@@ -3,6 +3,9 @@ from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 from entities.models import Client, ModeloVeiculo, Veiculo
+from datetime import date
+from sqlmodel import select
+from entities.models import VagaMensalista
 
 def listar_veiculos(db: Session):
     return db.exec(select(Veiculo).order_by(Veiculo.id_veiculo.desc())).all()
@@ -76,3 +79,17 @@ def desativar_veiculo(db: Session, id_veiculo: int):
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Não foi possível desativar o veículo.")
+
+def cliente_e_mensalista(db: Session, id_clients: int) -> bool:
+    hoje = date.today()
+
+    vinculo = db.exec(
+        select(VagaMensalista).where(
+            VagaMensalista.id_clients == id_clients,
+            VagaMensalista.data_inicio <= hoje,
+            (VagaMensalista.data_fim.is_(None))
+            | (VagaMensalista.data_fim >= hoje),
+        )
+    ).first()
+
+    return vinculo is not None
