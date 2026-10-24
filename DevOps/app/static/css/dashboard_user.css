@@ -21,9 +21,10 @@
 
     --sombra: 0 18px 55px rgba(0, 0, 0, .32);
     --raio: 15px;
+    --largura-menu: 255px;
 }
 
-/* ===== RESET E GERAL ===== */
+/* ===== RESET ===== */
 * {
     box-sizing: border-box;
 }
@@ -39,6 +40,7 @@ body {
     background: var(--fundo);
     color: var(--texto);
     font-family: Arial, Helvetica, sans-serif;
+    -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -61,7 +63,7 @@ button:disabled {
     opacity: .6;
 }
 
-/* ===== ESTRUTURA ===== */
+/* ===== ESTRUTURA DA PÁGINA ===== */
 .pagina {
     display: flex;
     min-height: 100vh;
@@ -72,11 +74,15 @@ button:disabled {
     position: fixed;
     inset: 0 auto 0 0;
     z-index: 10;
+
     display: flex;
     flex-direction: column;
-    width: 255px;
+
+    width: var(--largura-menu);
     padding: 25px 18px 18px;
+    overflow-x: hidden;
     overflow-y: auto;
+
     background: var(--branco);
     border-right: 1px solid var(--borda);
 }
@@ -85,6 +91,7 @@ button:disabled {
     display: flex;
     align-items: center;
     gap: 12px;
+
     padding: 0 5px 25px;
     border-bottom: 1px solid var(--borda);
 }
@@ -93,12 +100,16 @@ button:disabled {
     display: grid;
     place-items: center;
     flex-shrink: 0;
+
     width: 46px;
     height: 46px;
+
     border: 1px solid var(--borda);
     border-radius: 12px;
+
     background: var(--roxo);
     color: #211a30;
+
     font-size: 25px;
     font-weight: 900;
 }
@@ -109,7 +120,9 @@ button:disabled {
 
 .identidade-texto h1 {
     margin: 0;
+    color: var(--texto);
     font-size: 16px;
+    font-weight: 700;
     line-height: 1.3;
     overflow-wrap: anywhere;
 }
@@ -118,12 +131,15 @@ button:disabled {
     margin: 4px 0 0;
     color: var(--texto-secundario);
     font-size: 11px;
+    line-height: 1.5;
 }
 
+/* ===== NAVEGAÇÃO ===== */
 .navegacao {
     display: flex;
     flex-direction: column;
     gap: 8px;
+
     padding-top: 24px;
 }
 
@@ -131,17 +147,22 @@ button:disabled {
     display: flex;
     align-items: center;
     gap: 12px;
+
     min-height: 44px;
     padding: 10px 12px;
+
     border: 1px solid transparent;
     border-radius: 10px;
+
     color: var(--texto-secundario);
     font-size: 12px;
+    font-weight: 500;
+
     transition:
-        background .2s,
-        border-color .2s,
-        transform .2s,
-        color .2s;
+        background .2s ease,
+        border-color .2s ease,
+        transform .2s ease,
+        color .2s ease;
 }
 
 .item-menu:hover {
@@ -155,16 +176,20 @@ button:disabled {
     background: rgba(185, 160, 245, .14);
     border-color: var(--roxo);
     color: var(--roxo-forte);
-    font-weight: bold;
+    font-weight: 700;
 }
 
 .icone-menu {
     display: grid;
     place-items: center;
     flex-shrink: 0;
+
     width: 24px;
+    min-width: 24px;
+
     font-size: 17px;
-    font-weight: bold;
+    font-weight: 700;
+    line-height: 1;
 }
 
 /* ===== RODAPÉ DO MENU ===== */
@@ -177,6 +202,7 @@ button:disabled {
     display: flex;
     align-items: center;
     gap: 10px;
+
     padding: 14px 5px;
     border-top: 1px solid var(--borda);
 }
@@ -185,26 +211,31 @@ button:disabled {
     display: grid;
     place-items: center;
     flex-shrink: 0;
+
     width: 38px;
     height: 38px;
+
     border: 1px solid var(--borda);
     border-radius: 50%;
+
     background: rgba(243, 166, 196, .16);
     color: var(--rosa);
+
     font-size: 16px;
-    font-weight: bold;
+    font-weight: 700;
 }
 
 .usuario-informacoes {
     display: flex;
     flex-direction: column;
-    min-width: 0;
     gap: 4px;
+    min-width: 0;
 }
 
 .usuario-informacoes strong {
-    overflow-wrap: anywhere;
+    color: var(--texto);
     font-size: 12px;
+    overflow-wrap: anywhere;
 }
 
 .usuario-informacoes span {
@@ -215,21 +246,31 @@ button:disabled {
 .botao-sair {
     display: block;
     width: 100%;
+    min-height: 40px;
     padding: 10px;
+
     border: 1px solid var(--borda);
     border-radius: 9px;
+
     background: var(--branco);
     color: var(--texto);
+
     text-align: center;
     font-size: 12px;
-    font-weight: bold;
+    font-weight: 700;
+
     cursor: pointer;
-    transition: background .2s, border-color .2s;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        color .2s ease;
 }
 
 .botao-sair:hover {
     background: rgba(243, 166, 196, .12);
     border-color: var(--rosa);
+    color: var(--rosa);
 }
 
 /* ===== CONTEÚDO PRINCIPAL ===== */
@@ -237,18 +278,22 @@ button:disabled {
     display: flex;
     flex-direction: column;
     gap: 30px;
-    width: calc(100% - 255px);
+
+    width: calc(100% - var(--largura-menu));
     min-width: 0;
     min-height: 100vh;
-    margin-left: 255px;
+
+    margin-left: var(--largura-menu);
     padding: 30px clamp(18px, 3vw, 42px) 20px;
 }
 
+/* ===== CABEÇALHO ===== */
 .cabecalho {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 20px;
+
     padding-bottom: 24px;
     border-bottom: 1px solid var(--borda);
 }
@@ -259,6 +304,7 @@ button:disabled {
 
 .texto-superior {
     margin-bottom: 6px;
+
     color: var(--roxo-forte);
     font-size: 10px;
     font-weight: 800;
@@ -267,15 +313,20 @@ button:disabled {
 
 .cabecalho h2 {
     margin: 0;
+
+    color: var(--texto);
     font-size: clamp(25px, 3vw, 34px);
+    font-weight: 700;
     line-height: 1.2;
+    overflow-wrap: anywhere;
 }
 
 .descricao-cabecalho {
     margin: 8px 0 0;
+
     color: var(--texto-secundario);
     font-size: 13px;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
 .cabecalho-acoes {
@@ -286,52 +337,75 @@ button:disabled {
     gap: 10px;
 }
 
+/* ===== IDENTIFICAÇÃO DO PERFIL ===== */
 .etiqueta-perfil {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+
+    min-height: 36px;
     padding: 9px 13px;
+
     border: 1px solid var(--borda);
     border-radius: 9px;
+
     background: rgba(185, 160, 245, .14);
     color: var(--roxo-forte);
+
     font-size: 11px;
-    font-weight: bold;
+    font-weight: 700;
     white-space: nowrap;
 }
 
 .status-ponto {
     width: 7px;
     height: 7px;
+    flex-shrink: 0;
+
     border-radius: 50%;
     background: var(--verde);
+    box-shadow: 0 0 9px rgba(133, 213, 173, .35);
 }
 
-/* ===== BOTÕES ===== */
+/* ===== BOTÃO PRINCIPAL ===== */
 .botao-primario {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+
     min-height: 42px;
     padding: 9px 15px;
-    border: 1px solid var(--borda);
+
+    border: 1px solid var(--roxo);
     border-radius: 9px;
+
     background: var(--roxo);
     color: #211a30;
+
     font-size: 11px;
-    font-weight: bold;
+    font-weight: 700;
     text-align: center;
+
     cursor: pointer;
-    transition: transform .2s, background .2s;
+
+    transition:
+        transform .2s ease,
+        background .2s ease,
+        border-color .2s ease;
 }
 
 .botao-primario:hover {
     transform: translateY(-1px);
     background: var(--roxo-forte);
+    border-color: var(--roxo-forte);
 }
 
-/* ===== SEÇÕES ===== */
+.botao-primario:active {
+    transform: translateY(0);
+}
+
+/* ===== SEÇÃO DO DASHBOARD ===== */
 .secao-dashboard {
     display: flex;
     flex-direction: column;
@@ -348,33 +422,43 @@ button:disabled {
 
 .titulo-secao h3 {
     margin: 0;
+
+    color: var(--texto);
     font-size: 20px;
+    font-weight: 700;
     line-height: 1.3;
 }
 
 .titulo-secao p {
     margin: 5px 0 0;
+
     color: var(--texto-secundario);
     font-size: 12px;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
 .texto-atualizacao {
     flex-shrink: 0;
+
     color: var(--texto-secundario);
     font-size: 10px;
+    text-align: right;
 }
 
-/* ===== MENSAGEM ===== */
+/* ===== MENSAGENS DO DASHBOARD ===== */
 .mensagem-dashboard {
     display: none;
+
     padding: 12px 14px;
+
     border: 1px solid var(--borda);
     border-radius: 9px;
+
     background: var(--painel-secundario);
     color: var(--texto-secundario);
+
     font-size: 12px;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
 .mensagem-dashboard:not(:empty) {
@@ -382,16 +466,18 @@ button:disabled {
 }
 
 .mensagem-dashboard.erro {
-    border-color: rgba(255, 155, 175, .35);
+    border-color: rgba(255, 155, 175, .4);
+    background: rgba(255, 155, 175, .07);
     color: var(--vermelho);
 }
 
 .mensagem-dashboard.sucesso {
-    border-color: rgba(133, 213, 173, .35);
+    border-color: rgba(133, 213, 173, .4);
+    background: rgba(133, 213, 173, .07);
     color: var(--verde);
 }
 
-/* ===== INDICADORES ===== */
+/* ===== CARTÕES DE INDICADORES ===== */
 .grade-indicadores {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -401,16 +487,23 @@ button:disabled {
 .cartao-indicador {
     min-width: 0;
     padding: 20px;
+
     border: 1px solid var(--borda);
     border-radius: var(--raio);
+
     background: var(--branco);
     box-shadow: var(--sombra);
-    transition: border-color .2s, transform .2s;
+
+    transition:
+        border-color .2s ease,
+        transform .2s ease,
+        background .2s ease;
 }
 
 .cartao-indicador:hover {
     transform: translateY(-2px);
     border-color: #555a74;
+    background: #1c1e29;
 }
 
 .indicador-topo {
@@ -420,17 +513,76 @@ button:disabled {
     gap: 10px;
 }
 
-.indicador-icone,
-.atalho-icone {
+.indicador-icone {
     display: grid;
     place-items: center;
     flex-shrink: 0;
+
     width: 42px;
     height: 42px;
+
+    border: 1px solid transparent;
     border-radius: 12px;
+
     font-size: 18px;
+    line-height: 1;
 }
 
+.indicador-icone.roxo {
+    background: rgba(185, 160, 245, .14);
+    color: var(--roxo-forte);
+}
+
+.indicador-icone.azul {
+    background: rgba(142, 201, 240, .14);
+    color: var(--azul);
+}
+
+.indicador-icone.verde {
+    background: rgba(133, 213, 173, .14);
+    color: var(--verde);
+}
+
+.indicador-icone.rosa {
+    background: rgba(243, 166, 196, .14);
+    color: var(--rosa);
+}
+
+.indicador-legenda {
+    color: var(--texto-secundario);
+    font-size: 10px;
+    text-align: right;
+}
+
+.indicador-rotulo {
+    margin: 20px 0 8px;
+
+    color: var(--texto-secundario);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.indicador-valor {
+    display: block;
+
+    color: var(--texto);
+    font-size: clamp(27px, 3vw, 36px);
+    font-weight: 700;
+    line-height: 1.1;
+
+    overflow-wrap: anywhere;
+}
+
+.indicador-descricao {
+    display: block;
+    margin-top: 10px;
+
+    color: var(--texto-secundario);
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+/* ===== CLASSES DE CORES REUTILIZÁVEIS ===== */
 .roxo {
     background: rgba(185, 160, 245, .14);
     color: var(--roxo-forte);
@@ -451,35 +603,7 @@ button:disabled {
     color: var(--verde);
 }
 
-.indicador-legenda {
-    color: var(--texto-secundario);
-    font-size: 10px;
-    text-align: right;
-}
-
-.indicador-rotulo {
-    margin: 20px 0 8px;
-    color: var(--texto-secundario);
-    font-size: 12px;
-    line-height: 1.5;
-}
-
-.indicador-valor {
-    display: block;
-    font-size: clamp(27px, 3vw, 36px);
-    line-height: 1.1;
-    overflow-wrap: anywhere;
-}
-
-.indicador-descricao {
-    display: block;
-    margin-top: 10px;
-    color: var(--texto-secundario);
-    font-size: 10px;
-    line-height: 1.5;
-}
-
-/* ===== ATALHOS ===== */
+/* ===== ATALHOS (CASO UTILIZADOS) ===== */
 .grade-atalhos {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -490,15 +614,19 @@ button:disabled {
     display: flex;
     align-items: center;
     gap: 14px;
+
     min-width: 0;
     padding: 18px;
+
     border: 1px solid var(--borda);
     border-radius: 12px;
+
     background: var(--branco);
+
     transition:
-        background .2s,
-        border-color .2s,
-        transform .2s;
+        background .2s ease,
+        border-color .2s ease,
+        transform .2s ease;
 }
 
 .cartao-atalho:hover {
@@ -507,15 +635,28 @@ button:disabled {
     border-color: var(--roxo);
 }
 
+.atalho-icone {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+
+    width: 42px;
+    height: 42px;
+
+    border-radius: 12px;
+    font-size: 18px;
+}
+
 .atalho-conteudo {
     display: flex;
     flex: 1;
     flex-direction: column;
-    min-width: 0;
     gap: 6px;
+    min-width: 0;
 }
 
 .atalho-conteudo strong {
+    color: var(--texto);
     font-size: 13px;
 }
 
@@ -532,21 +673,24 @@ button:disabled {
 
 .link-texto {
     flex-shrink: 0;
+
     color: var(--roxo-forte);
     font-size: 11px;
-    font-weight: bold;
+    font-weight: 700;
 }
 
 .link-texto:hover {
     text-decoration: underline;
 }
 
-/* ===== TABELA ===== */
+/* ===== TABELAS (CASO UTILIZADAS) ===== */
 .painel-tabela {
     min-width: 0;
     overflow: hidden;
+
     border: 1px solid var(--borda);
     border-radius: var(--raio);
+
     background: var(--branco);
     box-shadow: var(--sombra);
 }
@@ -569,15 +713,19 @@ button:disabled {
 
 .tabela-responsiva th {
     padding: 14px 13px;
+
     border-bottom: 1px solid var(--borda);
+
     color: var(--texto);
     font-size: 10px;
-    font-weight: bold;
+    font-weight: 700;
 }
 
 .tabela-responsiva td {
     padding: 14px 13px;
+
     border-bottom: 1px solid var(--borda);
+
     color: var(--texto-secundario);
     font-size: 11px;
 }
@@ -617,16 +765,19 @@ button:disabled {
     font-size: 25px;
 }
 
-/* ===== SITUAÇÃO ===== */
+/* ===== ETIQUETAS DE SITUAÇÃO (CASO UTILIZADAS) ===== */
 .etiqueta-situacao {
     display: inline-block;
     padding: 5px 9px;
+
     border: 1px solid var(--borda);
     border-radius: 20px;
+
     background: var(--painel-secundario);
     color: var(--texto-secundario);
+
     font-size: 10px;
-    font-weight: bold;
+    font-weight: 700;
 }
 
 .etiqueta-situacao.entrada,
@@ -648,34 +799,39 @@ button:disabled {
     color: var(--amarelo);
 }
 
-/* ===== RODAPÉ ===== */
+/* ===== RODAPÉ DO CONTEÚDO ===== */
 .rodape-conteudo {
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 15px;
+
     margin-top: auto;
     padding-top: 17px;
+
     border-top: 1px solid var(--borda);
+
     color: var(--texto-secundario);
     font-size: 10px;
 }
 
 .rodape-conteudo p {
     margin: 0;
+    line-height: 1.5;
 }
 
-/* ===== RESPONSIVIDADE ===== */
+/* ===== RESPONSIVIDADE: NOTEBOOKS ===== */
 @media (max-width: 1200px) {
+    :root {
+        --largura-menu: 225px;
+    }
+
     .menu-lateral {
-        width: 225px;
         padding-inline: 14px;
     }
 
     .conteudo-principal {
-        width: calc(100% - 225px);
-        margin-left: 225px;
         padding-inline: 22px;
     }
 
@@ -684,6 +840,7 @@ button:disabled {
     }
 }
 
+/* ===== RESPONSIVIDADE: TABLETS E CELULARES ===== */
 @media (max-width: 760px) {
     .pagina {
         display: block;
@@ -691,9 +848,12 @@ button:disabled {
 
     .menu-lateral {
         position: relative;
+        inset: auto;
+
         width: 100%;
         max-height: none;
         padding: 15px;
+
         border-right: 0;
         border-bottom: 1px solid var(--borda);
     }
@@ -706,6 +866,7 @@ button:disabled {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 7px;
+
         padding-top: 15px;
     }
 
@@ -732,6 +893,7 @@ button:disabled {
         width: 100%;
         min-height: auto;
         margin-left: 0;
+
         padding: 22px 15px;
         gap: 25px;
     }
@@ -751,7 +913,8 @@ button:disabled {
     }
 
     .texto-atualizacao {
-        white-space: normal;
+        text-align: left;
+        overflow-wrap: anywhere;
     }
 
     .grade-atalhos {
@@ -765,9 +928,11 @@ button:disabled {
     }
 }
 
+/* ===== RESPONSIVIDADE: CELULARES PEQUENOS ===== */
 @media (max-width: 480px) {
     .conteudo-principal {
         padding: 18px 12px;
+        gap: 22px;
     }
 
     .cabecalho h2 {
@@ -776,6 +941,7 @@ button:disabled {
 
     .grade-indicadores {
         grid-template-columns: 1fr;
+        gap: 12px;
     }
 
     .cartao-indicador {
@@ -788,6 +954,7 @@ button:disabled {
 
     .cabecalho-acoes {
         width: 100%;
+        justify-content: flex-start;
     }
 
     .botao-primario {
@@ -807,6 +974,7 @@ button:disabled {
     }
 }
 
+/* ===== ACESSIBILIDADE ===== */
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

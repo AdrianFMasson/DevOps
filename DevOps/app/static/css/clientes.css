@@ -1,19 +1,37 @@
+/* =========================================================
+   CLIENTES — ESTACIONAMENTO
+   CSS completo e compatível com clientes.html
+   ========================================================= */
+
 /* ===== IDENTIDADE VISUAL ===== */
+
+/* ===== IDENTIDADE VISUAL — GRAFITE E ROXO ===== */
 :root {
-    --fundo: #17151d;
-    --branco: #211e29;
-    --texto: #f0edf5;
-    --texto-secundario: #aaa3b8;
-    --borda: #51465f;
-    --roxo: #7953a9;
-    --roxo-forte: #c6a4f3;
-    --azul: #263b50;
-    --rosa: #4a2b3b;
-    --lilas: #30263e;
-    --verde: #203e32;
-    --vermelho: #48282e;
-    --sombra: 4px 4px 0 #0c0b10;
-    --raio: 14px;
+    color-scheme: dark;
+
+    --fundo: #111219;
+    --branco: #191b25;
+    --painel-secundario: #202331;
+    --painel-hover: #2c2e40;
+
+    --texto: #f1eff7;
+    --texto-secundario: #a5a6b8;
+
+    --borda: #393d50;
+
+    --roxo: #9b82df;
+    --roxo-forte: #c5b3ff;
+
+    --azul: #253b52;
+    --rosa: #482b42;
+    --lilas: #29263b;
+
+    --verde: #203c32;
+    --vermelho: #452831;
+    --amarelo: #463b25;
+
+    --sombra: 0 18px 55px rgba(0, 0, 0, .30);
+    --raio: 15px;
 }
 
 * {
@@ -37,18 +55,26 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
     font: inherit;
 }
 
 button,
 a,
-input {
+input,
+select,
+textarea {
     -webkit-tap-highlight-color: transparent;
 }
 
 button {
     cursor: pointer;
+}
+
+a {
+    color: inherit;
 }
 
 [hidden] {
@@ -57,35 +83,45 @@ button {
 
 button:focus-visible,
 a:focus-visible,
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
     outline: 3px solid rgba(198, 164, 243, .45);
     outline-offset: 3px;
 }
 
-/* ===== ESTRUTURA ===== */
+/* ===== ESTRUTURA GERAL ===== */
+
 .pagina {
     display: flex;
     min-height: 100vh;
 }
 
+/* ===== MENU LATERAL ===== */
+
 .menu-lateral {
     position: fixed;
     inset: 0 auto 0 0;
     z-index: 10;
+
     display: flex;
     flex-direction: column;
+
     width: 255px;
     padding: 25px 18px 18px;
+
+    overflow-y: auto;
+
     background: var(--branco);
     border-right: 3px solid var(--borda);
-    overflow-y: auto;
 }
 
 .identidade {
     display: flex;
     align-items: center;
     gap: 12px;
+
     padding: 0 5px 25px;
+
     border-bottom: 2px solid var(--borda);
 }
 
@@ -93,15 +129,19 @@ input:focus-visible {
     display: grid;
     place-items: center;
     flex-shrink: 0;
+
     width: 46px;
     height: 46px;
+
     border: 2px solid var(--borda);
     border-radius: 12px;
+
     background: var(--roxo);
     box-shadow: 2px 2px 0 #0c0b10;
+
+    color: #fff;
     font-size: 25px;
     font-weight: 900;
-    color: #fff;
 }
 
 .identidade-texto {
@@ -116,54 +156,86 @@ input:focus-visible {
 
 .identidade-texto p {
     margin-top: 4px;
+
     color: var(--texto-secundario);
     font-family: Arial, sans-serif;
     font-size: 11px;
 }
 
-.navegacao {
+/* Menu utilizado pelo HTML */
+
+.menu {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 8px;
+
     padding-top: 24px;
 }
 
-.item-menu {
+.menu-titulo {
+    display: block;
+
+    margin: 14px 8px 5px;
+
+    color: var(--texto-secundario);
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+}
+
+.menu-link {
     display: flex;
     align-items: center;
     gap: 12px;
+
     min-height: 44px;
     padding: 10px 12px;
+
     border: 2px solid transparent;
     border-radius: 10px;
-    font-size: 12px;
+
+    background: transparent;
     color: var(--texto);
+
+    font-size: 12px;
     text-decoration: none;
-    transition: background .2s, border-color .2s, transform .2s;
+
+    transition:
+        background .2s,
+        border-color .2s,
+        transform .2s;
 }
 
-.item-menu:hover {
-    background: #30263e;
-    border-color: #7953a9;
-    transform: translateX(2px);
-}
-
-.item-menu.ativo {
-    background: #49365f;
-    border-color: var(--borda);
-    box-shadow: 2px 2px 0 #0c0b10;
-    font-weight: bold;
-}
-
-.icone-menu {
+.menu-link > span {
     display: grid;
     place-items: center;
     flex-shrink: 0;
+
     width: 24px;
+
     font-family: Arial, sans-serif;
     font-size: 18px;
     font-weight: bold;
 }
+
+.menu-link:hover {
+    background: var(--painel-hover);
+    border-color: var(--roxo);
+    transform: translateX(2px);
+}
+
+.menu-link.ativo {
+    background: #49365f;
+    border-color: var(--borda);
+    box-shadow: 2px 2px 0 #0c0b10;
+
+    color: var(--roxo-forte);
+    font-weight: bold;
+}
+
+/* ===== USUÁRIO E SAIR ===== */
 
 .rodape-menu {
     margin-top: auto;
@@ -174,7 +246,9 @@ input:focus-visible {
     display: flex;
     align-items: center;
     gap: 10px;
+
     padding: 14px 5px;
+
     border-top: 2px solid var(--borda);
 }
 
@@ -182,14 +256,18 @@ input:focus-visible {
     display: grid;
     place-items: center;
     flex-shrink: 0;
+
     width: 38px;
     height: 38px;
+
     border: 2px solid var(--borda);
     border-radius: 50%;
+
     background: #56354a;
+    color: #fff;
+
     font-size: 16px;
     font-weight: bold;
-    color: #fff;
 }
 
 .usuario-informacoes {
@@ -211,30 +289,38 @@ input:focus-visible {
 
 .botao-sair {
     display: block;
+
     padding: 10px;
+
     border: 2px solid var(--borda);
     border-radius: 9px;
-    background: #29232f;
+
+    background: var(--painel-secundario);
     color: var(--texto);
+
     text-align: center;
     text-decoration: none;
     font-size: 12px;
     font-weight: bold;
+
     transition: background .2s;
 }
 
 .botao-sair:hover {
-    background: #4a2b3b;
+    background: var(--rosa);
 }
 
-/* ===== CONTEÚDO ===== */
+/* ===== CONTEÚDO PRINCIPAL ===== */
+
 .conteudo-principal {
     display: flex;
     flex-direction: column;
     gap: 30px;
+
     width: calc(100% - 255px);
     min-width: 0;
     min-height: 100vh;
+
     margin-left: 255px;
     padding: 30px clamp(18px, 3vw, 42px) 20px;
 }
@@ -244,7 +330,9 @@ input:focus-visible {
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    padding: 0 0 24px;
+
+    padding-bottom: 24px;
+
     border-bottom: 3px solid var(--borda);
 }
 
@@ -254,6 +342,7 @@ input:focus-visible {
 
 .texto-superior {
     margin-bottom: 6px;
+
     color: var(--roxo-forte);
     font-family: Arial, sans-serif;
     font-size: 10px;
@@ -268,6 +357,7 @@ input:focus-visible {
 
 .descricao-cabecalho {
     margin-top: 8px;
+
     color: var(--texto-secundario);
     font-family: Arial, sans-serif;
     font-size: 13px;
@@ -281,22 +371,27 @@ input:focus-visible {
 
 .etiqueta-perfil {
     padding: 9px 13px;
+
     border: 2px solid var(--borda);
     border-radius: 9px;
+
     background: #49365f;
     color: var(--texto);
+
     font-size: 11px;
     font-weight: bold;
     white-space: nowrap;
 }
 
 /* ===== SEÇÃO DE CLIENTES ===== */
+
 .secao-clientes {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    min-width: 0;
+
     width: 100%;
+    min-width: 0;
 }
 
 .titulo-secao {
@@ -313,55 +408,77 @@ input:focus-visible {
 
 .titulo-secao p {
     margin-top: 5px;
+
     color: var(--texto-secundario);
     font-family: Arial, sans-serif;
     font-size: 12px;
 }
 
 /* ===== BOTÕES ===== */
+
 .botao-primario,
 .botao-secundario {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+
     min-height: 42px;
     padding: 9px 15px;
+
     border: 2px solid var(--borda);
     border-radius: 9px;
-    background: var(--roxo);
+
     box-shadow: 2px 2px 0 #0c0b10;
+
     color: #fff;
     font-size: 11px;
     font-weight: bold;
     text-align: center;
-    transition: transform .2s, box-shadow .2s, background .2s;
+
+    transition:
+        transform .2s,
+        box-shadow .2s,
+        background .2s;
 }
 
-.botao-primario:hover,
-.botao-secundario:hover {
-    transform: translate(2px, 2px);
-    box-shadow: none;
+.botao-primario {
+    background: var(--roxo);
 }
 
 .botao-primario:hover {
     background: #8e69bd;
+    transform: translate(2px, 2px);
+    box-shadow: none;
 }
 
 .botao-secundario {
-    background: #29232f;
+    background: var(--painel-secundario);
     color: var(--texto);
 }
 
 .botao-secundario:hover {
-    background: #4a2b3b;
+    background: var(--rosa);
+    transform: translate(2px, 2px);
+    box-shadow: none;
 }
 
-/* ===== FORMULÁRIO ===== */
+button:disabled {
+    cursor: not-allowed;
+    opacity: .6;
+}
+
+/* ===== FORMULÁRIO DE CLIENTE ===== */
+
 .painel-formulario-cliente {
+    width: 100%;
+    min-width: 0;
+
     padding: 22px;
+
     border: 2px solid var(--borda);
     border-radius: var(--raio);
+
     background: var(--branco);
     box-shadow: var(--sombra);
 }
@@ -376,72 +493,121 @@ input:focus-visible {
     gap: 18px;
 }
 
-.campo-cliente {
+.campo-cliente,
+.campo-formulario {
     display: flex;
     flex-direction: column;
     gap: 8px;
+
     min-width: 0;
 }
+
+/* Nome completo ocupa toda a primeira linha */
 
 .campo-cliente:first-child {
     grid-column: 1 / -1;
 }
 
 .campo-cliente label,
-.barra-pesquisa label {
+.campo-formulario label {
+    color: var(--texto);
+    font-family: Arial, sans-serif;
     font-size: 12px;
     font-weight: bold;
 }
 
-.campo-cliente input {
+.campo-cliente input,
+.campo-formulario input {
+    display: block;
+
     width: 100%;
     min-width: 0;
     min-height: 44px;
+
     padding: 10px 12px;
+
     border: 2px solid var(--borda);
     border-radius: 8px;
-    background: #17151d;
+
+    background: var(--fundo);
     color: var(--texto);
+
     font-family: Arial, sans-serif;
     font-size: 12px;
+
     outline: none;
-    transition: border-color .2s, box-shadow .2s;
+
+    transition:
+        border-color .2s,
+        box-shadow .2s;
 }
 
-.campo-cliente input:focus {
+.campo-cliente input:focus,
+.campo-formulario input:focus {
     border-color: var(--roxo-forte);
     box-shadow: 0 0 0 3px rgba(198, 164, 243, .15);
 }
 
-.campo-cliente input::placeholder {
+.campo-cliente input::placeholder,
+.campo-formulario input::placeholder {
     color: #92899f;
     opacity: 1;
 }
 
-.campo-cliente input#documento::placeholder {
-    color: #92899f;
-    opacity: 1;
+/* CPF */
+
+#documento {
+    width: 100%;
 }
 
-/* ===== TELEFONE DE CONTATO ===== */
-.campo-cliente input#telefone-cliente {
+/* Telefone — o HTML usa class="campo-formulario" */
+
+#telefone-cliente {
+    display: block;
     width: 100%;
     min-width: 0;
+    min-height: 44px;
+
+    padding: 10px 12px;
+
+    border: 2px solid var(--borda);
+    border-radius: 8px;
+
+    background: var(--fundo);
+    color: var(--texto);
+
     font-family: Arial, sans-serif;
-    letter-spacing: 0.3px;
+    font-size: 12px;
+    letter-spacing: .3px;
+
+    outline: none;
+    box-shadow: none;
+
+    transition:
+        border-color .2s,
+        box-shadow .2s;
 }
 
-.campo-cliente input#telefone-cliente::placeholder {
+#telefone-cliente::placeholder {
     color: #92899f;
     opacity: 1;
 }
+
+#telefone-cliente:focus {
+    border-color: var(--roxo-forte);
+    box-shadow: 0 0 0 3px rgba(198, 164, 243, .15);
+}
+
+/* ===== MENSAGENS ===== */
 
 .mensagem-formulario-cliente,
 .mensagem-lista-clientes {
     margin-top: 12px;
+
     font-family: Arial, sans-serif;
     font-size: 12px;
     line-height: 1.5;
+    overflow-wrap: anywhere;
 }
 
 .mensagem-formulario-cliente:empty,
@@ -451,54 +617,93 @@ input:focus-visible {
 
 .mensagem-formulario-cliente.erro,
 .mensagem-lista-clientes.erro {
-    color: #ff929b;
+    padding: 10px 12px;
+    border: 1px solid #75414a;
+    border-radius: 8px;
+
+    background: var(--vermelho);
+    color: #ffabb3;
 }
 
 .mensagem-formulario-cliente.sucesso,
 .mensagem-lista-clientes.sucesso {
-    color: #8ce0b2;
+    padding: 10px 12px;
+    border: 1px solid #416b55;
+    border-radius: 8px;
+
+    background: var(--verde);
+    color: #a6e8c2;
 }
+
+/* ===== AÇÕES DO FORMULÁRIO ===== */
 
 .acoes-formulario-cliente {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
+
     margin-top: 20px;
+    padding-top: 18px;
+
+    border-top: 1px solid var(--borda);
 }
 
-/* ===== PESQUISA E TABELA ===== */
+/* ===== PAINEL DA TABELA ===== */
+
 .painel-tabela {
+    width: 100%;
     min-width: 0;
     overflow: hidden;
+
     border: 2px solid var(--borda);
     border-radius: var(--raio);
+
     background: var(--branco);
     box-shadow: var(--sombra);
 }
+
+.painel-clientes {
+    margin-top: 0;
+}
+
+/* ===== BARRA DE PESQUISA ===== */
 
 .barra-pesquisa {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 15px;
+
     padding: 18px;
+
     border-bottom: 2px solid var(--borda);
 }
 
 .barra-pesquisa label {
     flex-shrink: 0;
+
+    color: var(--texto);
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
 }
 
 .barra-pesquisa input {
     width: min(100%, 370px);
+    min-width: 0;
     min-height: 42px;
+
     padding: 10px 13px;
+
     border: 2px solid var(--borda);
     border-radius: 8px;
-    background: #17151d;
+
+    background: var(--fundo);
     color: var(--texto);
+
     font-family: Arial, sans-serif;
     font-size: 12px;
+
     outline: none;
 }
 
@@ -512,51 +717,73 @@ input:focus-visible {
     opacity: 1;
 }
 
+/* ===== TABELA RESPONSIVA ===== */
+
 .tabela-responsiva {
     width: 100%;
+    min-width: 0;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
 }
 
 .tabela-responsiva table {
     width: 100%;
+    min-width: 680px;
+
     border-collapse: collapse;
     text-align: left;
-    white-space: nowrap;
 }
 
 .tabela-responsiva thead {
-    background: #30263e;
+    background: var(--lilas);
 }
 
 .tabela-responsiva th {
     padding: 14px 13px;
+
     border-bottom: 2px solid var(--borda);
+
+    color: var(--roxo-forte);
+    font-family: Arial, sans-serif;
     font-size: 10px;
     font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    white-space: nowrap;
 }
 
 .tabela-responsiva td {
     padding: 14px 13px;
+
     border-bottom: 1px solid #393240;
+
+    color: var(--texto);
     font-family: Arial, sans-serif;
     font-size: 11px;
+    vertical-align: middle;
 }
 
 .tabela-responsiva tbody tr:last-child td {
     border-bottom: 0;
 }
 
-.tabela-responsiva tbody tr:hover:not(:has(.mensagem-vazia)) {
-    background: #29232f;
+.tabela-responsiva tbody tr:hover {
+    background: rgba(198, 164, 243, .045);
 }
+
+/* ===== SITUAÇÃO DO CLIENTE ===== */
 
 .situacao-cliente {
     display: inline-block;
+
     padding: 5px 9px;
+
     border: 1px solid #416b55;
     border-radius: 20px;
+
     background: var(--verde);
     color: #a6e8c2;
+
     font-size: 10px;
     font-weight: bold;
     white-space: nowrap;
@@ -568,6 +795,36 @@ input:focus-visible {
     color: #ffabb3;
 }
 
+/* Compatibilidade com outras classes que o JavaScript possa gerar */
+
+.status-cliente,
+.status,
+.badge-status {
+    display: inline-block;
+    padding: 5px 9px;
+    border: 1px solid var(--borda);
+    border-radius: 20px;
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.status-cliente.ativo,
+.status.ativo,
+.badge-status.ativo {
+    background: var(--verde);
+    color: #a6e8c2;
+}
+
+.status-cliente.inativo,
+.status.inativo,
+.badge-status.inativo {
+    background: var(--vermelho);
+    color: #ffabb3;
+}
+
+/* ===== BOTÕES DE AÇÃO NA TABELA ===== */
+
 .acoes-cliente {
     display: flex;
     align-items: center;
@@ -577,16 +834,22 @@ input:focus-visible {
 .botao-acao-cliente {
     min-height: 31px;
     padding: 5px 9px;
+
     border: 2px solid var(--borda);
     border-radius: 7px;
+
     background: var(--azul);
     box-shadow: 2px 2px 0 #0c0b10;
+
     color: #d8eaff;
-    font-family: Copperplate, "Copperplate Gothic Light", Georgia, serif;
+    font-family: Arial, sans-serif;
     font-size: 10px;
     font-weight: bold;
     white-space: nowrap;
-    transition: transform .2s, box-shadow .2s;
+
+    transition:
+        transform .2s,
+        box-shadow .2s;
 }
 
 .botao-acao-cliente:hover {
@@ -599,10 +862,24 @@ input:focus-visible {
     color: #ffdce8;
 }
 
+/* Compatibilidade com botões comuns gerados pelo JavaScript */
+
+.tabela-responsiva td button {
+    margin: 2px 4px 2px 0;
+}
+
+.tabela-responsiva td button.botao-primario,
+.tabela-responsiva td button.botao-secundario {
+    min-height: 31px;
+    padding: 5px 9px;
+    font-size: 10px;
+}
+
+/* ===== ESTADO VAZIO / CARREGAMENTO ===== */
+
 .mensagem-vazia {
     height: 170px;
     text-align: center;
-    white-space: normal;
 }
 
 .mensagem-vazia strong,
@@ -613,28 +890,35 @@ input:focus-visible {
 .mensagem-vazia strong {
     margin: 8px 0 4px;
     color: var(--texto);
+    font-family: Arial, sans-serif;
     font-size: 13px;
 }
 
 .mensagem-vazia span {
     color: var(--texto-secundario);
+    font-family: Arial, sans-serif;
     font-size: 11px;
 }
 
 .mensagem-vazia .mensagem-vazia-icone {
+    color: var(--roxo-forte);
     font-family: Arial, sans-serif;
     font-size: 25px;
 }
 
 /* ===== RODAPÉ ===== */
+
 .rodape-conteudo {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 15px;
+
     margin-top: auto;
     padding-top: 17px;
+
     border-top: 2px solid var(--borda);
+
     color: var(--texto-secundario);
     font-family: Arial, sans-serif;
     font-size: 10px;
@@ -644,19 +928,34 @@ input:focus-visible {
     margin: 0;
 }
 
-/* ===== RESPONSIVIDADE ===== */
+/* ===== RESPONSIVIDADE: TABLETS ===== */
+
 @media (max-width: 1200px) {
     .menu-lateral {
         width: 225px;
-        padding-inline: 14px;
+        padding-right: 14px;
+        padding-left: 14px;
     }
 
     .conteudo-principal {
         width: calc(100% - 225px);
         margin-left: 225px;
-        padding-inline: 22px;
+        padding-right: 22px;
+        padding-left: 22px;
+    }
+
+    .painel-formulario-cliente {
+        padding: 20px;
+    }
+
+    .tabela-responsiva th,
+    .tabela-responsiva td {
+        padding-right: 11px;
+        padding-left: 11px;
     }
 }
+
+/* ===== RESPONSIVIDADE: CELULARES ===== */
 
 @media (max-width: 760px) {
     .pagina {
@@ -665,9 +964,14 @@ input:focus-visible {
 
     .menu-lateral {
         position: relative;
+        inset: auto;
+
         width: 100%;
         max-height: none;
         padding: 15px;
+
+        overflow: visible;
+
         border-right: 0;
         border-bottom: 3px solid var(--borda);
     }
@@ -676,20 +980,26 @@ input:focus-visible {
         padding-bottom: 15px;
     }
 
-    .navegacao {
+    .menu {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 7px;
+
         padding-top: 15px;
     }
 
-    .item-menu {
+    .menu-titulo {
+        grid-column: 1 / -1;
+        margin-top: 10px;
+    }
+
+    .menu-link {
         min-width: 0;
         padding: 9px;
         font-size: 11px;
     }
 
-    .icone-menu {
+    .menu-link > span {
         width: 20px;
     }
 
@@ -709,8 +1019,10 @@ input:focus-visible {
     .conteudo-principal {
         width: 100%;
         min-height: auto;
+
         margin-left: 0;
         padding: 22px 15px;
+
         gap: 25px;
     }
 
@@ -723,7 +1035,7 @@ input:focus-visible {
     }
 
     .descricao-cabecalho {
-        max-width: 340px;
+        max-width: 400px;
     }
 
     .etiqueta-perfil {
@@ -749,6 +1061,8 @@ input:focus-visible {
     }
 }
 
+/* ===== RESPONSIVIDADE: TELAS PEQUENAS ===== */
+
 @media (max-width: 520px) {
     .conteudo-principal {
         padding: 18px 12px;
@@ -757,6 +1071,7 @@ input:focus-visible {
     .cabecalho {
         flex-direction: column;
         align-items: flex-start;
+        gap: 14px;
     }
 
     .cabecalho-acoes {
@@ -768,12 +1083,16 @@ input:focus-visible {
         flex-direction: column;
     }
 
+    .titulo-secao > div {
+        min-width: 0;
+    }
+
     .titulo-secao .botao-primario {
         width: 100%;
     }
 
     .grade-formulario-clientes {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .campo-cliente:first-child {
@@ -805,11 +1124,18 @@ input:focus-visible {
         align-items: flex-start;
         gap: 5px;
     }
+
+    #telefone-cliente {
+        min-height: 44px;
+        font-size: 16px;
+    }
 }
 
+/* ===== RESPONSIVIDADE: CELULARES ESTREITOS ===== */
+
 @media (max-width: 400px) {
-    .navegacao {
-        grid-template-columns: 1fr;
+    .menu {
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .cabecalho h2 {
@@ -819,55 +1145,24 @@ input:focus-visible {
     .etiqueta-perfil {
         white-space: normal;
     }
+
+    .painel-formulario-cliente {
+        padding: 13px;
+    }
+
+    .titulo-secao h3 {
+        font-size: 17px;
+    }
 }
 
 /* ===== ACESSIBILIDADE ===== */
+
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
         scroll-behavior: auto !important;
         transition: none !important;
-    }
-}
-
-/* ===== CORREÇÃO DO CAMPO TELEFONE ===== */
-#telefone-cliente {
-    display: block !important;
-    width: 100% !important;
-    min-width: 0;
-    min-height: 44px;
-    padding: 10px 12px;
-    border: 2px solid #51465f !important;
-    border-radius: 8px;
-    background-color: #17151d !important;
-    color: #f0edf5 !important;
-    font-family: Arial, sans-serif;
-    font-size: 12px;
-    outline: none;
-    box-shadow: none;
-    transition: border-color .2s, box-shadow .2s;
-}
-
-#telefone-cliente::placeholder {
-    color: #92899f !important;
-    opacity: 1;
-}
-
-#telefone-cliente:focus {
-    border-color: #c6a4f3 !important;
-    box-shadow: 0 0 0 3px rgba(198, 164, 243, .15) !important;
-}
-
-#telefone-cliente:disabled {
-    opacity: .6;
-    cursor: not-allowed;
-}
-
-@media (max-width: 520px) {
-    #telefone-cliente {
-        min-height: 44px;
-        padding: 10px 12px;
-        font-size: 16px;
+        animation: none !important;
     }
 }
