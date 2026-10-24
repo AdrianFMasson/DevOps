@@ -30,6 +30,7 @@ from routes.tarifas_rota import tarifas_rota
 from routes.movimentacoes_rota import movimentacoes_rota
 from routes.admin_rota import admin_rota
 from routes.user_rota import rota_user
+from routes import user_rota
 
 from entities.models import PerfilUsuario
 
@@ -99,6 +100,7 @@ app.include_router(vagas_mensalistas_rota)
 app.include_router(tarifas_rota)
 app.include_router(movimentacoes_rota)
 app.include_router(rota_user)
+app.include_router(user_rota)
 app.include_router(admin_rota)
 
 
