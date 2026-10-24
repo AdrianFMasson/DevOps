@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const campoNome = document.getElementById("nome-completo");
     const campoDocumento = document.getElementById("documento");
     const campoEmail = document.getElementById("email-cliente");
+    const campoTelefone = document.getElementById("telefone-cliente");
 
     const campoPesquisa = document.getElementById("pesquisa-clientes");
     const listaClientes = document.getElementById("lista-clientes");
@@ -43,19 +44,22 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    // Valida se os elementos necessários ao cadastro estão presentes.
-    if (podeCadastrar && (
-        !formulario ||
-        !painelFormulario ||
-        !campoId ||
-        !campoNome ||
-        !campoDocumento ||
-        !campoEmail ||
-        !botaoNovo ||
-        !botaoCancelar ||
-        !botaoSalvar ||
-        !tituloFormulario
-    )) {
+    if (
+        podeCadastrar &&
+        (
+            !formulario ||
+            !painelFormulario ||
+            !campoId ||
+            !campoNome ||
+            !campoDocumento ||
+            !campoEmail ||
+            !campoTelefone ||
+            !botaoNovo ||
+            !botaoCancelar ||
+            !botaoSalvar ||
+            !tituloFormulario
+        )
+    ) {
         console.error("O formulário de clientes está incompleto.");
         return;
     }
@@ -130,6 +134,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return cliente.email ?? "";
     }
 
+    function obterTelefone(cliente) {
+        return cliente.telefone ?? "";
+    }
+
     function clienteAtivo(cliente) {
         return cliente.ativo === undefined ||
             cliente.ativo === null ||
@@ -165,7 +173,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const conteudo = [
                 obterNome(cliente),
                 obterDocumento(cliente),
-                obterEmail(cliente)
+                obterEmail(cliente),
+                obterTelefone(cliente)
             ].join(" ").toLocaleLowerCase("pt-BR");
 
             return conteudo.includes(pesquisa);
@@ -319,18 +328,20 @@ document.addEventListener("DOMContentLoaded", () => {
     function abrirFormulario(cliente = null) {
         if (!podeCadastrar || !formulario || !painelFormulario) return;
 
+        // Verifica a permissão antes de preencher ou abrir a edição.
+        if (cliente && !ehAdmin) return;
+
         formulario.reset();
+
         campoId.value = cliente
             ? String(obterId(cliente) ?? "")
             : "";
 
         if (cliente) {
-            // A edição continua restrita ao administrador.
-            if (!ehAdmin) return;
-
             campoNome.value = obterNome(cliente);
             campoDocumento.value = obterDocumento(cliente);
             campoEmail.value = obterEmail(cliente);
+            campoTelefone.value = obterTelefone(cliente);
 
             tituloFormulario.textContent = "Editar cliente";
             botaoSalvar.textContent = "Salvar alterações";
@@ -390,9 +401,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const nome = campoNome.value.trim();
         const documento = campoDocumento.value.trim();
         const email = campoEmail.value.trim();
+        const telefone = campoTelefone.value.trim();
         const id = campoId.value.trim();
 
-        // Impede o operador de enviar uma atualização de cliente.
+        // Operador não pode editar clientes.
         if (!ehAdmin && id) {
             mostrarMensagem(
                 mensagemFormulario,
@@ -402,19 +414,69 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        if (!nome || !documento) {
+        // Todos os campos são obrigatórios.
+        if (!nome || !documento || !email || !telefone) {
             mostrarMensagem(
                 mensagemFormulario,
-                "Preencha o nome completo e o documento.",
+                "Preencha todos os campos antes de salvar o cliente.",
                 "erro"
             );
+            return;
+        }
+
+        // Não permite números no nome.
+        if (/\d/.test(nome)) {
+            mostrarMensagem(
+                mensagemFormulario,
+                "O nome não pode conter números.",
+                "erro"
+            );
+            campoNome.focus();
+            return;
+        }
+
+        // Exige 11 dígitos no CPF.
+        const cpfNumeros = documento.replace(/\D/g, "");
+
+        if (cpfNumeros.length !== 11) {
+            mostrarMensagem(
+                mensagemFormulario,
+                "Informe um CPF com 11 dígitos.",
+                "erro"
+            );
+            campoDocumento.focus();
+            return;
+        }
+
+        // Verifica o formato básico do e-mail.
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            mostrarMensagem(
+                mensagemFormulario,
+                "Informe um e-mail válido.",
+                "erro"
+            );
+            campoEmail.focus();
+            return;
+        }
+
+        // Exige pelo menos 10 dígitos no telefone.
+        const telefoneNumeros = telefone.replace(/\D/g, "");
+
+        if (telefoneNumeros.length < 10 || telefoneNumeros.length > 13) {
+            mostrarMensagem(
+                mensagemFormulario,
+                "Informe um telefone válido, com DDD.",
+                "erro"
+            );
+            campoTelefone.focus();
             return;
         }
 
         const dados = {
             nome_completo: nome,
             documento,
-            email: email || null
+            email,
+            telefone
         };
 
         const editando = Boolean(id);
@@ -510,6 +572,61 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // Impede números no nome enquanto o usuário digita.
+    campoNome?.addEventListener("input", function () {
+        this.value = this.value.replace(/[0-9]/g, "");
+    });
+
+    // Formata o CPF automaticamente: 000.000.000-00.
+    campoDocumento?.addEventListener("input", function () {
+        let cpf = this.value.replace(/\D/g, "").substring(0, 11);
+
+        if (cpf.length > 9) {
+            cpf = cpf.replace(
+                /^(\d{3})(\d{3})(\d{3})(\d{1,2}).*/,
+                "$1.$2.$3-$4"
+            );
+        } else if (cpf.length > 6) {
+            cpf = cpf.replace(
+                /^(\d{3})(\d{3})(\d{1,3}).*/,
+                "$1.$2.$3"
+            );
+        } else if (cpf.length > 3) {
+            cpf = cpf.replace(
+                /^(\d{3})(\d{1,3}).*/,
+                "$1.$2"
+            );
+        }
+
+        this.value = cpf;
+    });
+
+    // Formata o telefone enquanto o usuário digita.
+    campoTelefone?.addEventListener("input", function () {
+        let numeros = this.value.replace(/\D/g, "").substring(0, 11);
+
+        if (numeros.length > 10) {
+            numeros = numeros.replace(
+                /^(\d{2})(\d{5})(\d{1,4}).*/,
+                "($1) $2-$3"
+            );
+        } else if (numeros.length > 6) {
+            numeros = numeros.replace(
+                /^(\d{2})(\d{4})(\d{1,4}).*/,
+                "($1) $2-$3"
+            );
+        } else if (numeros.length > 2) {
+            numeros = numeros.replace(
+                /^(\d{2})(\d{1,5})/,
+                "($1) $2"
+            );
+        } else if (numeros.length > 0) {
+            numeros = numeros.replace(/^(\d{1,2})/, "($1");
+        }
+
+        this.value = numeros;
+    });
+
     // Administrador e operador podem abrir, cancelar e cadastrar.
     if (podeCadastrar && formulario) {
         botaoNovo?.addEventListener("click", () => abrirFormulario());
@@ -517,9 +634,7 @@ document.addEventListener("DOMContentLoaded", () => {
         formulario.addEventListener("submit", salvarCliente);
     }
 
-    // A pesquisa funciona para os dois perfis.
     campoPesquisa?.addEventListener("input", renderizarClientes);
 
-    // A listagem é carregada para os dois perfis.
     carregarClientes();
 });

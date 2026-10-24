@@ -830,3 +830,44 @@ input:focus-visible {
         transition: none !important;
     }
 }
+
+/* ===== CORREÇÃO DO CAMPO TELEFONE ===== */
+#telefone-cliente {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 2px solid #51465f !important;
+    border-radius: 8px;
+    background-color: #17151d !important;
+    color: #f0edf5 !important;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    outline: none;
+    box-shadow: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+#telefone-cliente::placeholder {
+    color: #92899f !important;
+    opacity: 1;
+}
+
+#telefone-cliente:focus {
+    border-color: #c6a4f3 !important;
+    box-shadow: 0 0 0 3px rgba(198, 164, 243, .15) !important;
+}
+
+#telefone-cliente:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+    #telefone-cliente {
+        min-height: 44px;
+        padding: 10px 12px;
+        font-size: 16px;
+    }
+}

@@ -227,32 +227,29 @@
                             <div class="grade-formulario-clientes">
 
                                 <div class="campo-cliente">
-                                    <label for="nome-completo">
-                                        Nome completo
-                                    </label>
-
+                                    <label for="nome-completo">Nome completo</label>
                                     <input
                                         type="text"
                                         id="nome-completo"
-                                        name="nome_completo"
-                                        maxlength="150"
+                                        name="nome"
+                                        placeholder="Digite o nome completo"
                                         autocomplete="name"
-                                        required>
+                                        required
+                                    >
                                 </div>
 
                                 <div class="campo-cliente">
-                                    <label for="documento">
-                                        CPF ou documento
-                                    </label>
-
+                                    <label for="documento">CPF</label>
                                     <input
                                         type="text"
                                         id="documento"
                                         name="documento"
-                                        placeholder="000.000.000-00"
+                                        placeholder="Digite o CPF (000.000.000-00)"
                                         maxlength="14"
                                         autocomplete="off"
-                                        required>
+                                        inputmode="numeric"
+                                        required
+                                    >
                                 </div>
 
                                 <div class="campo-cliente">
@@ -265,8 +262,10 @@
                                         id="email-cliente"
                                         name="email"
                                         maxlength="150"
-                                        autocomplete="email">
-                                </div>
+                                        autocomplete="email"
+                                        required
+                                    >
+                                </div> 
 
 
                                 <div class="campo-formulario">
@@ -278,6 +277,7 @@
                                         placeholder="Ex.: (49) 99999-9999"
                                         maxlength="20"
                                         autocomplete="tel"
+                                        required
                                     >
                                 </div>
 
