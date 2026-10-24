@@ -1,11 +1,13 @@
+
 from pathlib import Path
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, Request, HTTPException, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session
 from jwt import InvalidTokenError
-from datetime import datetime
+
 from db.db import database
 from entities.models import User, PerfilUsuario
 from utils.seguranca import decodificar_token
@@ -13,8 +15,13 @@ from utils.seguranca import decodificar_token
 
 rota_user = APIRouter()
 
-DIRETORIO_TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
-templates = Jinja2Templates(directory=str(DIRETORIO_TEMPLATES))
+DIRETORIO_TEMPLATES = (
+    Path(__file__).resolve().parent.parent / "templates"
+)
+
+templates = Jinja2Templates(
+    directory=str(DIRETORIO_TEMPLATES)
+)
 
 
 def obter_usuario_autenticado(
@@ -34,7 +41,12 @@ def obter_usuario_autenticado(
 
         id_usuario = int(payload["sub"])
 
-    except (InvalidTokenError, ValueError, KeyError, TypeError):
+    except (
+        InvalidTokenError,
+        ValueError,
+        KeyError,
+        TypeError,
+    ):
         return None
 
     usuario = db.get(User, id_usuario)
@@ -66,13 +78,34 @@ def verificar_operador(
     return autenticacao
 
 
+def verificar_administrador(
+    request: Request,
+    db: Session,
+):
+    autenticacao = obter_usuario_autenticado(request, db)
+
+    if autenticacao is None:
+        return None
+
+    if autenticacao["perfil"] != PerfilUsuario.ADMINISTRADOR:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso permitido somente ao administrador.",
+        )
+
+    return autenticacao
+
+
 def redirecionar_login():
     resposta = RedirectResponse(
-        url="/login",
+        url="/",
         status_code=status.HTTP_303_SEE_OTHER,
     )
 
-    resposta.delete_cookie("access_token", path="/")
+    resposta.delete_cookie(
+        "access_token",
+        path="/",
+    )
 
     return resposta
 
@@ -92,6 +125,7 @@ def dashboard_user(
         name="dashboard_user.html",
         context={
             "usuario": autenticacao["usuario"],
+            "ano_atual": datetime.now().year,
         },
     )
 
@@ -111,9 +145,11 @@ def pagina_veiculos(
         name="veiculos.html",
         context={
             "usuario": autenticacao["usuario"],
+            "eh_admin": False,
             "ano_atual": datetime.now().year,
         },
     )
+
 
 @rota_user.get("/user/vagas")
 def pagina_vagas(
@@ -130,6 +166,8 @@ def pagina_vagas(
         name="vagas.html",
         context={
             "usuario": autenticacao["usuario"],
+            "eh_admin": False,
+            "ano_atual": datetime.now().year,
         },
     )
 
@@ -149,5 +187,7 @@ def pagina_clientes(
         name="clientes.html",
         context={
             "usuario": autenticacao["usuario"],
+            "eh_admin": False,
+            "ano_atual": datetime.now().year,
         },
     )

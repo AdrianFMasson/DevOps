@@ -1,7 +1,15 @@
+
 from contextlib import asynccontextmanager
 from pathlib import Path
+from datetime import datetime
 
-from fastapi import FastAPI, Request, Depends, HTTPException, Request, status
+from fastapi import (
+    FastAPI,
+    Request,
+    Depends,
+    HTTPException,
+    status,
+)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
@@ -20,12 +28,10 @@ from routes.vagas_rota import vagas_rota
 from routes.vagas_mensalistas_rota import vagas_mensalistas_rota
 from routes.tarifas_rota import tarifas_rota
 from routes.movimentacoes_rota import movimentacoes_rota
-from routes import user_rota
-from datetime import datetime
+from routes.admin_rota import admin_rota
+from routes.user_rota import rota_user
 
 from entities.models import PerfilUsuario
-
-
 
 
 # =========================================================
@@ -62,23 +68,23 @@ app = FastAPI(
     title="Sistema de Estacionamento",
     description="API para gerenciamento de estacionamento",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 
 # =========================================================
-# ARQUIVOS ESTÁTICOS: CSS, JAVASCRIPT, IMAGENS
+# ARQUIVOS ESTÁTICOS
 # =========================================================
 
 app.mount(
     "/static",
     StaticFiles(directory=str(DIRETORIO_STATIC)),
-    name="static"
+    name="static",
 )
 
 
 # =========================================================
-# ROTAS DA API
+# ROTAS DA API E ROUTERS
 # =========================================================
 
 app.include_router(auth_rota)
@@ -92,7 +98,41 @@ app.include_router(vagas_rota)
 app.include_router(vagas_mensalistas_rota)
 app.include_router(tarifas_rota)
 app.include_router(movimentacoes_rota)
-app.include_router(user_rota.rota_user)
+app.include_router(rota_user)
+app.include_router(admin_rota)
+
+
+# =========================================================
+# FUNÇÃO AUXILIAR DE AUTORIZAÇÃO
+# =========================================================
+
+def exigir_administrador(
+    request: Request,
+    db: Session,
+):
+    autenticacao = user_rota.obter_usuario_autenticado(
+        request,
+        db,
+    )
+
+    if autenticacao is None:
+        return None
+
+    if autenticacao["perfil"] != PerfilUsuario.ADMINISTRADOR:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso permitido somente ao administrador.",
+        )
+
+    return autenticacao["usuario"]
+
+
+def contexto_administrador(usuario):
+    return {
+        "usuario": usuario,
+        "eh_admin": True,
+        "ano_atual": datetime.now().year,
+    }
 
 
 # =========================================================
@@ -104,33 +144,28 @@ def inicio(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="login.html",
-        context={}
+        context={},
     )
 
 
 # =========================================================
-# DASHBOARD DO ADMINISTRADOR
-# =========================================================
-
-@app.get("/dashboard-admin", include_in_schema=False)
-def dashboard_gestor(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="dashboard_admin.html",
-        context={}
-    )
-
-
-# =========================================================
-# PÁGINAS DO SISTEMA
+# PÁGINAS ADMINISTRATIVAS
 # =========================================================
 
 @app.get("/clientes", include_in_schema=False)
-def pagina_clientes(request: Request):
+def pagina_clientes(
+    request: Request,
+    db: Session = Depends(database.get_db),
+):
+    usuario = exigir_administrador(request, db)
+
+    if usuario is None:
+        return user_rota.redirecionar_login()
+
     return templates.TemplateResponse(
         request=request,
         name="clientes.html",
-        context={}
+        context=contexto_administrador(usuario),
     )
 
 
@@ -139,51 +174,64 @@ def pagina_veiculos(
     request: Request,
     db: Session = Depends(database.get_db),
 ):
-    autenticacao = user_rota.obter_usuario_autenticado(request, db)
+    usuario = exigir_administrador(request, db)
 
-    if autenticacao is None:
+    if usuario is None:
         return user_rota.redirecionar_login()
-
-    usuario = autenticacao["usuario"]
-
-    if usuario.perfil != PerfilUsuario.ADMINISTRADOR:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acesso permitido somente ao administrador.",
-        )
 
     return templates.TemplateResponse(
         request=request,
         name="veiculos.html",
-        context={
-            "usuario": usuario,
-            "ano_atual": datetime.now().year,
-        },
+        context=contexto_administrador(usuario),
     )
 
 
 @app.get("/vagas", include_in_schema=False)
-def pagina_vagas(request: Request):
+def pagina_vagas(
+    request: Request,
+    db: Session = Depends(database.get_db),
+):
+    usuario = exigir_administrador(request, db)
+
+    if usuario is None:
+        return user_rota.redirecionar_login()
+
     return templates.TemplateResponse(
         request=request,
         name="vagas.html",
-        context={}
+        context=contexto_administrador(usuario),
     )
 
 
 @app.get("/movimentacoes", include_in_schema=False)
-def pagina_movimentacoes(request: Request):
+def pagina_movimentacoes(
+    request: Request,
+    db: Session = Depends(database.get_db),
+):
+    usuario = exigir_administrador(request, db)
+
+    if usuario is None:
+        return user_rota.redirecionar_login()
+
     return templates.TemplateResponse(
         request=request,
         name="movimentacoes.html",
-        context={}
+        context=contexto_administrador(usuario),
     )
 
 
 @app.get("/usuarios", include_in_schema=False)
-def pagina_usuarios(request: Request):
+def pagina_usuarios(
+    request: Request,
+    db: Session = Depends(database.get_db),
+):
+    usuario = exigir_administrador(request, db)
+
+    if usuario is None:
+        return user_rota.redirecionar_login()
+
     return templates.TemplateResponse(
         request=request,
         name="usuarios.html",
-        context={}
+        context=contexto_administrador(usuario),
     )
