@@ -1,11 +1,12 @@
-
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import jwt
 from pwdlib import PasswordHash
+from sqlmodel import Session
 
 from config.Config import settings
+from entities.models import TokenRevogado
 
 
 _hasher = PasswordHash.recommended()
@@ -134,3 +135,31 @@ def decodificar_token(
         raise ValueError("Identificador do token inválido.")
 
     return payload
+
+
+def verificar_token_revogado(
+    payload: dict,
+    db: Session,
+) -> bool:
+    """
+    Verifica se o JWT foi revogado durante o logout.
+
+    Retorna:
+        True: token encontrado na tabela de revogações.
+        False: token não encontrado.
+
+    Erros de banco de dados são propagados para impedir
+    que uma falha na consulta seja interpretada como sessão válida.
+    """
+
+    if not isinstance(payload, dict):
+        raise ValueError("Conteúdo do token inválido.")
+
+    jti = payload.get("jti")
+
+    if not isinstance(jti, str) or not jti:
+        raise ValueError("Identificador do token inválido.")
+
+    token_revogado = db.get(TokenRevogado, jti)
+
+    return token_revogado is not None

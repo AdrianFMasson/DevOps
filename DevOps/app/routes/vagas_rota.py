@@ -34,13 +34,6 @@ class VagaResposta(BaseModel):
     dt_cadastro: Optional[datetime] = None
     dt_atualizacao: Optional[datetime] = None
 
-@vagas_rota.get("/vagas", response_class=HTMLResponse, name="pagina_vagas", include_in_schema=False)
-def pagina_vagas(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="vagas.html",
-        context={"request": request, "ano_atual": datetime.now().year}
-    )
 
 @vagas_rota.get("/api/vagas", response_model=list[VagaResposta], status_code=status.HTTP_200_OK)
 def obter_vagas(db: Session = Depends(database.get_db)):

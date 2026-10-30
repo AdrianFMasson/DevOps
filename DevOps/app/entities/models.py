@@ -638,3 +638,30 @@ class Auditoria(SQLModel, table=True):
         default=None,
         sa_column=Column(JSON, nullable=True),
     )
+
+class TokenRevogado(SQLModel, table=True):
+    __tablename__ = "tokens_revogados"
+
+    jti: str = Field(
+        sa_column=Column(
+            String(36),
+            primary_key=True,
+            nullable=False,
+        )
+    )
+
+    expira_em: datetime = Field(
+        sa_column=Column(
+            DATETIME(fsp=6),
+            nullable=False,
+        )
+    )
+
+    revogado_em: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(
+            DATETIME(fsp=6),
+            nullable=False,
+            server_default=text("CURRENT_TIMESTAMP(6)"),
+        )
+    )

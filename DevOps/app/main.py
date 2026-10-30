@@ -1,4 +1,3 @@
-
 from contextlib import asynccontextmanager
 from pathlib import Path
 from datetime import datetime
@@ -12,7 +11,6 @@ from fastapi import (
 )
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse
 from sqlmodel import Session
 
 from db.db import database
@@ -74,44 +72,41 @@ app = FastAPI(
 
 
 # =========================================================
-# ARQUIVOS ESTÁTICOS
+# AUTENTICAÇÃO CENTRALIZADA
 # =========================================================
 
-app.mount(
-    "/static",
-    StaticFiles(directory=str(DIRETORIO_STATIC)),
-    name="static",
-)
+def exigir_usuario_autenticado(
+    request: Request,
+    db: Session = Depends(database.get_db),
+):
+    """
+    Exige uma sessão válida para acessar os endpoints
+    dos routers protegidos.
+    """
 
+    autenticacao = user_rota.obter_usuario_autenticado(
+        request,
+        db,
+    )
 
-# =========================================================
-# ROTAS DA API E ROUTERS
-# =========================================================
+    if autenticacao is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sessão inválida ou expirada. Faça login novamente.",
+        )
 
-app.include_router(auth_rota)
-app.include_router(usuarios_rota)
-app.include_router(clientes_rota)
-app.include_router(telefones_clientes_rota)
-app.include_router(marcas_veiculo_rota)
-app.include_router(modelos_veiculo_rota)
-app.include_router(veiculos_rota)
-app.include_router(vagas_rota)
-app.include_router(vagas_mensalistas_rota)
-app.include_router(tarifas_rota)
-app.include_router(movimentacoes_rota)
-app.include_router(rota_user)
-app.include_router(user_rota)
-app.include_router(admin_rota)
+    return autenticacao["usuario"]
 
-
-# =========================================================
-# FUNÇÃO AUXILIAR DE AUTORIZAÇÃO
-# =========================================================
 
 def exigir_administrador(
     request: Request,
     db: Session,
 ):
+    """
+    Verifica se o usuário está autenticado
+    e possui perfil de administrador.
+    """
+
     autenticacao = user_rota.obter_usuario_autenticado(
         request,
         db,
@@ -129,12 +124,126 @@ def exigir_administrador(
     return autenticacao["usuario"]
 
 
+def exigir_administrador_autenticado(
+    request: Request,
+    db: Session = Depends(database.get_db),
+):
+    """
+    Dependência para proteger integralmente
+    os endpoints administrativos.
+    """
+
+    usuario = exigir_administrador(request, db)
+
+    if usuario is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sessão inválida ou expirada. Faça login novamente.",
+        )
+
+    return usuario
+
+
 def contexto_administrador(usuario):
     return {
         "usuario": usuario,
         "eh_admin": True,
         "ano_atual": datetime.now().year,
     }
+
+
+# =========================================================
+# ARQUIVOS ESTÁTICOS
+# =========================================================
+
+app.mount(
+    "/static",
+    StaticFiles(directory=str(DIRETORIO_STATIC)),
+    name="static",
+)
+
+
+# =========================================================
+# ROTAS PÚBLICAS
+# =========================================================
+
+# Login e logout permanecem públicos.
+app.include_router(auth_rota)
+
+
+# =========================================================
+# ROTAS PROTEGIDAS - USUÁRIO AUTENTICADO
+# =========================================================
+
+app.include_router(
+    usuarios_rota,
+    dependencies=[Depends(exigir_usuario_autenticado)],
+)
+
+app.include_router(
+    clientes_rota,
+    dependencies=[Depends(exigir_usuario_autenticado)],
+)
+
+app.include_router(
+    telefones_clientes_rota,
+    dependencies=[Depends(exigir_usuario_autenticado)],
+)
+
+app.include_router(
+    marcas_veiculo_rota,
+    dependencies=[Depends(exigir_usuario_autenticado)],
+)
+
+app.include_router(
+    modelos_veiculo_rota,
+    dependencies=[Depends(exigir_usuario_autenticado)],
+)
+
+app.include_router(
+    veiculos_rota,
+    dependencies=[Depends(exigir_usuario_autenticado)],
+)
+
+app.include_router(
+    vagas_rota,
+    dependencies=[Depends(exigir_usuario_autenticado)],
+)
+
+app.include_router(
+    vagas_mensalistas_rota,
+    dependencies=[Depends(exigir_usuario_autenticado)],
+)
+
+app.include_router(
+    tarifas_rota,
+    dependencies=[Depends(exigir_usuario_autenticado)],
+)
+
+app.include_router(
+    movimentacoes_rota,
+    dependencies=[Depends(exigir_usuario_autenticado)],
+)
+
+
+# =========================================================
+# ROTAS PROTEGIDAS - ADMINISTRADOR
+# =========================================================
+
+app.include_router(
+    admin_rota,
+    dependencies=[Depends(exigir_administrador_autenticado)],
+)
+
+
+# =========================================================
+# ROTAS DO USUÁRIO
+# =========================================================
+
+# Esse router já possui sua própria validação de usuário
+# por meio das funções existentes em user_rota.py.
+
+app.include_router(rota_user)
 
 
 # =========================================================
@@ -237,3 +346,22 @@ def pagina_usuarios(
         name="usuarios.html",
         context=contexto_administrador(usuario),
     )
+
+
+# =========================================================
+# IMPEDIR CACHE DE RESPOSTAS DINÂMICAS
+# =========================================================
+
+@app.middleware("http")
+async def impedir_cache_paginas(request: Request, call_next):
+    resposta = await call_next(request)
+
+    # Não interfere no cache dos arquivos estáticos.
+    if not request.url.path.startswith("/static/"):
+        resposta.headers["Cache-Control"] = (
+            "no-store, no-cache, must-revalidate, max-age=0"
+        )
+        resposta.headers["Pragma"] = "no-cache"
+        resposta.headers["Expires"] = "0"
+
+    return resposta
