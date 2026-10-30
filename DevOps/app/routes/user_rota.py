@@ -11,11 +11,13 @@ from fastapi import (
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session
-from jwt import InvalidTokenError
 
 from db.db import database
-from entities.models import User, PerfilUsuario, TokenRevogado
-from utils.seguranca import decodificar_token
+from entities.models import User, PerfilUsuario
+from utils.seguranca import (
+    decodificar_token,
+    verificar_token_revogado,
+)
 
 
 rota_user = APIRouter()
@@ -63,28 +65,18 @@ def obter_usuario_autenticado(
             tipo_esperado="access",
         )
 
-        # 2. Obter os identificadores do token.
+        # 2. Obter o identificador do usuário.
         id_usuario = int(payload["sub"])
-        jti = payload["jti"]
 
-        if not jti:
+        # 3. Verificar se o token foi revogado.
+        if verificar_token_revogado(payload, db):
             return None
 
     except (
-        InvalidTokenError,
         ValueError,
         KeyError,
         TypeError,
     ):
-        return None
-
-    # 3. Verificar se o token foi revogado no logout.
-    token_revogado = db.get(
-        TokenRevogado,
-        jti,
-    )
-
-    if token_revogado is not None:
         return None
 
     # 4. Verificar se o usuário ainda existe.

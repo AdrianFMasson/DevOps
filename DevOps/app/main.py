@@ -1,3 +1,4 @@
+
 from contextlib import asynccontextmanager
 from pathlib import Path
 from datetime import datetime
@@ -11,6 +12,7 @@ from fastapi import (
 )
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import Response
 from sqlmodel import Session
 
 from db.db import database
@@ -80,8 +82,8 @@ def exigir_usuario_autenticado(
     db: Session = Depends(database.get_db),
 ):
     """
-    Exige uma sessão válida para acessar os endpoints
-    dos routers protegidos.
+    Exige uma sessão válida para acessar
+    os endpoints dos routers protegidos.
     """
 
     autenticacao = user_rota.obter_usuario_autenticado(
@@ -167,7 +169,9 @@ app.mount(
 # ROTAS PÚBLICAS
 # =========================================================
 
-# Login e logout permanecem públicos.
+# Login, verificação de sessão e logout.
+# Todas estão definidas em auth_rota.py.
+
 app.include_router(auth_rota)
 
 
@@ -240,7 +244,7 @@ app.include_router(
 # ROTAS DO USUÁRIO
 # =========================================================
 
-# Esse router já possui sua própria validação de usuário
+# Esse router já possui sua própria validação
 # por meio das funções existentes em user_rota.py.
 
 app.include_router(rota_user)
@@ -349,19 +353,187 @@ def pagina_usuarios(
 
 
 # =========================================================
-# IMPEDIR CACHE DE RESPOSTAS DINÂMICAS
+# PÁGINAS QUE EXIGEM SESSÃO AUTENTICADA
+# =========================================================
+
+PAGINAS_PROTEGIDAS = {
+    "/dashboard-admin",
+    "/dashboard-user",
+    "/user/veiculos",
+    "/user/vagas",
+    "/user/clientes",
+    "/clientes",
+    "/veiculos",
+    "/vagas",
+    "/movimentacoes",
+    "/usuarios",
+}
+
+
+# =========================================================
+# SCRIPT DE VERIFICAÇÃO DA SESSÃO
+# =========================================================
+
+SCRIPT_VERIFICACAO_SESSAO = """
+<script>
+(function () {
+    "use strict";
+
+    let verificando = false;
+
+    async function verificarSessao(evento) {
+
+        if (verificando) {
+            return;
+        }
+
+        verificando = true;
+
+        // Esconde somente quando a página é restaurada
+        // pelo histórico do navegador.
+        if (evento && evento.persisted) {
+            document.documentElement.style.visibility = "hidden";
+        }
+
+        try {
+
+            const resposta = await fetch("/api/verificar-sessao", {
+                method: "GET",
+                credentials: "same-origin",
+                cache: "no-store",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            });
+
+            if (!resposta.ok) {
+                window.location.replace("/");
+                return;
+            }
+
+            const resultado = await resposta.json();
+
+            if (resultado.autenticado !== true) {
+                window.location.replace("/");
+                return;
+            }
+
+            // Libera a página depois da confirmação.
+            document.documentElement.style.visibility = "visible";
+
+        } catch (erro) {
+
+            console.error("Erro ao verificar sessão:", erro);
+
+            window.location.replace("/");
+
+        } finally {
+            verificando = false;
+        }
+    }
+
+
+    // Verifica ao abrir ou restaurar uma página.
+    window.addEventListener("pageshow", verificarSessao);
+
+
+    // Esconde a página antes de ela entrar no histórico.
+    window.addEventListener("pagehide", function () {
+        document.documentElement.style.visibility = "hidden";
+    });
+
+})();
+</script>
+"""
+
+
+# =========================================================
+# MIDDLEWARE - CACHE E HISTÓRICO DO NAVEGADOR
 # =========================================================
 
 @app.middleware("http")
 async def impedir_cache_paginas(request: Request, call_next):
+
     resposta = await call_next(request)
 
-    # Não interfere no cache dos arquivos estáticos.
-    if not request.url.path.startswith("/static/"):
+    caminho = request.url.path
+
+    # -----------------------------------------------------
+    # IMPEDIR CACHE DAS PÁGINAS
+    # -----------------------------------------------------
+
+    if not caminho.startswith("/static/"):
+
         resposta.headers["Cache-Control"] = (
             "no-store, no-cache, must-revalidate, max-age=0"
         )
+
         resposta.headers["Pragma"] = "no-cache"
         resposta.headers["Expires"] = "0"
 
-    return resposta
+
+    # -----------------------------------------------------
+    # INJETAR SCRIPT SOMENTE NAS PÁGINAS PROTEGIDAS
+    # -----------------------------------------------------
+
+    if (
+        caminho not in PAGINAS_PROTEGIDAS
+        or resposta.status_code != 200
+        or "text/html" not in resposta.headers.get("content-type", "")
+    ):
+        return resposta
+
+
+    # -----------------------------------------------------
+    # LER O CONTEÚDO HTML
+    # -----------------------------------------------------
+
+    partes = []
+
+    async for parte in resposta.body_iterator:
+        partes.append(parte)
+
+    conteudo = b"".join(partes)
+
+    script = SCRIPT_VERIFICACAO_SESSAO.encode("utf-8")
+
+
+    # -----------------------------------------------------
+    # INSERIR SCRIPT ANTES DO FECHAMENTO DO HEAD
+    # -----------------------------------------------------
+
+    posicao = conteudo.lower().rfind(b"</head>")
+
+    if posicao >= 0:
+
+        conteudo = (
+            conteudo[:posicao]
+            + script
+            + b"\n"
+            + conteudo[posicao:]
+        )
+
+    else:
+
+        conteudo = script + conteudo
+
+
+    # -----------------------------------------------------
+    # CRIAR NOVA RESPOSTA PRESERVANDO OS CABEÇALHOS
+    # -----------------------------------------------------
+
+    nova_resposta = Response(
+        content=conteudo,
+        status_code=resposta.status_code,
+        background=resposta.background,
+    )
+
+    nova_resposta.raw_headers = [
+        (nome, valor)
+        for nome, valor in resposta.raw_headers
+        if nome.lower() != b"content-length"
+    ]
+
+    nova_resposta.headers["Content-Length"] = str(len(conteudo))
+
+    return nova_resposta
