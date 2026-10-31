@@ -1,32 +1,57 @@
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import HTMLResponse
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, ConfigDict, Field
-from sqlmodel import Session
+from sqlmodel import Session, select
+
 from db.db import database
-from entities.models import TipoVaga, StatusVaga
-from controller.VagasController import listar_vagas, buscar_vaga, cadastrar_vaga, atualizar_vaga, excluir_vaga
+from entities.models import (
+    TipoVaga,
+    StatusVaga,
+    Vaga,
+    VagaMensalista,
+)
+
+from controller.VagasController import (
+    listar_vagas,
+    buscar_vaga,
+    cadastrar_vaga,
+    atualizar_vaga,
+    excluir_vaga,
+)
+
 
 DIRETORIO_APP = Path(__file__).resolve().parent.parent
-templates = Jinja2Templates(directory=str(DIRETORIO_APP / "templates"))
+
+templates = Jinja2Templates(
+    directory=str(DIRETORIO_APP / "templates")
+)
 
 vagas_rota = APIRouter(tags=["Vagas"])
+
 
 class VagaCriacao(BaseModel):
     codigo: str = Field(min_length=1, max_length=20)
     tipo: TipoVaga
     status: StatusVaga = StatusVaga.ATIVA
 
+
 class VagaAtualizacao(BaseModel):
-    codigo: Optional[str] = Field(default=None, min_length=1, max_length=20)
+    codigo: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=20
+    )
     tipo: Optional[TipoVaga] = None
     status: Optional[StatusVaga] = None
 
+
 class VagaResposta(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+
     id_vaga: int
     codigo: str
     tipo: TipoVaga
@@ -35,28 +60,101 @@ class VagaResposta(BaseModel):
     dt_atualizacao: Optional[datetime] = None
 
 
-@vagas_rota.get("/api/vagas", response_model=list[VagaResposta], status_code=status.HTTP_200_OK)
-def obter_vagas(db: Session = Depends(database.get_db)):
+@vagas_rota.get(
+    "/api/vagas",
+    response_model=list[VagaResposta],
+    status_code=status.HTTP_200_OK
+)
+def obter_vagas(
+    db: Session = Depends(database.get_db)
+):
     return listar_vagas(db)
 
-@vagas_rota.get("/api/vagas/{id_vaga}", response_model=VagaResposta, status_code=status.HTTP_200_OK)
-def obter_vaga(id_vaga: int, db: Session = Depends(database.get_db)):
+
+# Vagas mensalistas vinculadas a um cliente
+@vagas_rota.get(
+    "/api/vagas/mensalistas/cliente/{id_clients}",
+    response_model=list[VagaResposta],
+    status_code=status.HTTP_200_OK
+)
+def obter_vagas_mensalistas_cliente(
+    id_clients: int,
+    db: Session = Depends(database.get_db)
+):
+    hoje = date.today()
+
+    consulta = (
+        select(Vaga)
+        .join(
+            VagaMensalista,
+            VagaMensalista.id_vaga == Vaga.id_vaga
+        )
+        .where(
+            VagaMensalista.id_clients == id_clients,
+            VagaMensalista.data_fim.is_(None),
+            VagaMensalista.data_inicio <= hoje,
+            Vaga.tipo == TipoVaga.MENSALISTA,
+            Vaga.status == StatusVaga.ATIVA
+        )
+    )
+
+    vagas = db.exec(consulta).all()
+
+    return vagas
+
+
+@vagas_rota.get(
+    "/api/vagas/{id_vaga}",
+    response_model=VagaResposta,
+    status_code=status.HTTP_200_OK
+)
+def obter_vaga(
+    id_vaga: int,
+    db: Session = Depends(database.get_db)
+):
     return buscar_vaga(db, id_vaga)
 
-@vagas_rota.post("/api/vagas", response_model=VagaResposta, status_code=status.HTTP_201_CREATED)
-def criar_vaga(dados: VagaCriacao, db: Session = Depends(database.get_db)):
+
+@vagas_rota.post(
+    "/api/vagas",
+    response_model=VagaResposta,
+    status_code=status.HTTP_201_CREATED
+)
+def criar_vaga(
+    dados: VagaCriacao,
+    db: Session = Depends(database.get_db)
+):
     return cadastrar_vaga(db, dados.model_dump())
 
-@vagas_rota.put("/api/vagas/{id_vaga}", response_model=VagaResposta, status_code=status.HTTP_200_OK)
-def editar_vaga(id_vaga: int, dados: VagaAtualizacao, db: Session = Depends(database.get_db)):
+
+@vagas_rota.put(
+    "/api/vagas/{id_vaga}",
+    response_model=VagaResposta,
+    status_code=status.HTTP_200_OK
+)
+def editar_vaga(
+    id_vaga: int,
+    dados: VagaAtualizacao,
+    db: Session = Depends(database.get_db)
+):
     dados_atualizados = dados.model_dump(exclude_unset=True)
+
     if not dados_atualizados:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Informe pelo menos um campo para atualizar."
         )
+
     return atualizar_vaga(db, id_vaga, dados_atualizados)
 
-@vagas_rota.delete("/api/vagas/{id_vaga}", response_model=VagaResposta, status_code=status.HTTP_200_OK)
-def remover_vaga(id_vaga: int, db: Session = Depends(database.get_db)):
+
+@vagas_rota.delete(
+    "/api/vagas/{id_vaga}",
+    response_model=VagaResposta,
+    status_code=status.HTTP_200_OK
+)
+def remover_vaga(
+    id_vaga: int,
+    db: Session = Depends(database.get_db)
+):
     return excluir_vaga(db, id_vaga)
