@@ -1,5 +1,6 @@
+
 from datetime import datetime
-from decimal import Decimal, ROUND_CEILING
+from decimal import Decimal, ROUND_CEILING, ROUND_HALF_UP
 
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
@@ -55,7 +56,6 @@ def buscar_movimentacao(
     db: Session,
     id_movimentacao: int
 ):
-
     movimentacao = db.get(
         Movimentacao,
         id_movimentacao
@@ -96,7 +96,6 @@ def validar_entrada(
     modalidade: ModalidadeMovimentacao,
     id_tarifa: int | None = None
 ):
-
     veiculo = db.get(
         Veiculo,
         id_veiculo
@@ -205,6 +204,12 @@ def validar_entrada(
                 detail="Tarifa inexistente, inativa ou fora da vigência."
             )
 
+        if Decimal(str(tarifa.valor_hora)) <= Decimal("0"):
+            raise HTTPException(
+                status_code=400,
+                detail="O valor por hora da tarifa é inválido."
+            )
+
     # -----------------------------------------------------
     # MENSALISTA
     # -----------------------------------------------------
@@ -255,48 +260,59 @@ def calcular_valor_horista(
     saida: datetime,
     tarifa: Tarifa
 ) -> Decimal:
+    """
+    Calcula o valor proporcional por minuto.
+
+    Regra:
+    - Desconta os minutos de tolerância.
+    - Arredonda segundos excedentes para o próximo minuto.
+    - Divide o valor da hora por 60.
+    - Multiplica pelos minutos cobrados.
+    - Arredonda o resultado para duas casas decimais.
+    """
 
     segundos = Decimal(
         str((saida - entrada).total_seconds())
     )
 
-    minutos = int(
-        (
-            segundos / Decimal("60")
-        ).to_integral_value(
+    if segundos <= 0:
+        return Decimal("0.00")
+
+    # Arredonda o tempo estacionado para o próximo minuto.
+    minutos_totais = int(
+        (segundos / Decimal("60")).to_integral_value(
             rounding=ROUND_CEILING
         )
     )
 
-    # Período dentro da tolerância.
-    if minutos <= tarifa.minutos_tolerancia:
+    tolerancia = int(tarifa.minutos_tolerancia or 0)
+
+    # Se estiver dentro da tolerância, não cobra.
+    if minutos_totais <= tolerancia:
         return Decimal("0.00")
 
-    minutos_cobraveis = (
-        minutos - tarifa.minutos_tolerancia
-    )
+    # Desconta a tolerância.
+    minutos_cobraveis = minutos_totais - tolerancia
 
-    minutos_fracao = int(
-        tarifa.minutos_fracao or 60
-    )
+    # Valor da tarifa por hora.
+    valor_hora = Decimal(str(tarifa.valor_hora))
 
-    if minutos_fracao <= 0:
+    if valor_hora <= 0:
         raise HTTPException(
             status_code=400,
-            detail="A configuração da fração da tarifa é inválida."
+            detail="O valor por hora da tarifa é inválido."
         )
 
-    quantidade_fracoes = (
-        minutos_cobraveis + minutos_fracao - 1
-    ) // minutos_fracao
+    # Calcula o valor proporcional por minuto.
+    valor_por_minuto = valor_hora / Decimal("60")
 
-    valor = (
-        Decimal(str(tarifa.valor_fracao))
-        * Decimal(quantidade_fracoes)
+    valor_total = (
+        valor_por_minuto * Decimal(minutos_cobraveis)
     )
 
-    return valor.quantize(
-        Decimal("0.01")
+    return valor_total.quantize(
+        Decimal("0.01"),
+        rounding=ROUND_HALF_UP
     )
 
 
@@ -312,7 +328,6 @@ def registrar_entrada(
     modalidade: ModalidadeMovimentacao,
     id_tarifa: int | None = None
 ):
-
     usuario = db.get(
         User,
         id_usuario_entrada
@@ -343,14 +358,12 @@ def registrar_entrada(
     db.add(movimentacao)
 
     try:
-
         db.commit()
         db.refresh(movimentacao)
 
         return movimentacao
 
     except IntegrityError:
-
         db.rollback()
 
         raise HTTPException(
@@ -372,7 +385,6 @@ def registrar_saida(
     id_movimentacao: int,
     id_usuario_saida: int
 ):
-
     movimentacao = buscar_movimentacao(
         db,
         id_movimentacao
@@ -396,7 +408,6 @@ def registrar_saida(
         )
 
     saida = obter_data_hora_atual()
-
     entrada = movimentacao.data_hora_entrada
 
     if saida < entrada:
@@ -442,6 +453,8 @@ def registrar_saida(
 
     elif movimentacao.modalidade == ModalidadeMovimentacao.MENSALISTA:
 
+        # A mensalidade é cobrada separadamente.
+        # Não existe cobrança por entrada ou saída.
         valor_total = Decimal("0.00")
 
     # -----------------------------------------------------
@@ -455,14 +468,12 @@ def registrar_saida(
     db.add(movimentacao)
 
     try:
-
         db.commit()
         db.refresh(movimentacao)
 
         return movimentacao
 
     except IntegrityError:
-
         db.rollback()
 
         raise HTTPException(

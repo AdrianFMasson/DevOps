@@ -1,5 +1,6 @@
+
 from datetime import datetime
-from decimal import Decimal, ROUND_CEILING
+from decimal import Decimal, ROUND_CEILING, ROUND_HALF_UP
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -119,13 +120,13 @@ class SaidaDados(BaseModel):
 def agora_local_sem_fuso() -> datetime:
     """
     O banco utiliza DATETIME sem timezone.
-    Por isso, usamos o horário local do servidor sem informação de fuso.
+    Usa o horário local do servidor.
     """
     return datetime.now().astimezone().replace(tzinfo=None)
 
 
 # =========================================================
-# TARIFA
+# CALCULAR VALOR HORISTA
 # =========================================================
 
 def calcular_valor_horista(
@@ -133,40 +134,60 @@ def calcular_valor_horista(
     saida: datetime,
     tarifa: Tarifa
 ) -> Decimal:
+    """
+    Cobrança proporcional por minuto.
+
+    Regras:
+    - Tarifa de R$ 13,00 por hora (configurada no banco).
+    - Tolerância de 10 minutos (configurada no banco).
+    - Frações de minuto são arredondadas para o próximo minuto.
+    - Valor final arredondado para duas casas decimais.
+    """
 
     segundos = Decimal(
         str((saida - entrada).total_seconds())
     )
 
-    minutos = int(
+    if segundos <= 0:
+        return Decimal("0.00")
+
+    minutos_totais = int(
         (segundos / Decimal("60")).to_integral_value(
             rounding=ROUND_CEILING
         )
     )
 
-    if minutos <= tarifa.minutos_tolerancia:
-        return Decimal("0.00")
+    tolerancia = int(tarifa.minutos_tolerancia or 0)
 
-    minutos_cobraveis = minutos - tarifa.minutos_tolerancia
-
-    minutos_fracao = int(tarifa.minutos_fracao or 60)
-
-    if minutos_fracao <= 0:
+    if tolerancia < 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A configuração de minutos da fração é inválida."
+            detail="A tolerância da tarifa é inválida."
         )
 
-    quantidade_fracoes = (
-        minutos_cobraveis + minutos_fracao - 1
-    ) // minutos_fracao
+    if minutos_totais <= tolerancia:
+        return Decimal("0.00")
 
-    valor = (
-        Decimal(str(tarifa.valor_fracao))
-        * Decimal(quantidade_fracoes)
+    minutos_cobraveis = minutos_totais - tolerancia
+
+    valor_hora = Decimal(str(tarifa.valor_hora))
+
+    if valor_hora <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="O valor por hora da tarifa é inválido."
+        )
+
+    valor_por_minuto = valor_hora / Decimal("60")
+
+    valor_total = (
+        valor_por_minuto * Decimal(minutos_cobraveis)
     )
 
-    return valor.quantize(Decimal("0.01"))
+    return valor_total.quantize(
+        Decimal("0.01"),
+        rounding=ROUND_HALF_UP
+    )
 
 
 # =========================================================
@@ -550,6 +571,12 @@ def registrar_entrada(
                 detail="Tarifa inválida ou fora da vigência."
             )
 
+        if Decimal(str(tarifa.valor_hora)) <= Decimal("0"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="O valor por hora da tarifa é inválido."
+            )
+
     elif dados.modalidade == ModalidadeMovimentacao.MENSALISTA:
 
         if vaga.tipo != TipoVaga.MENSALISTA:
@@ -680,6 +707,12 @@ def registrar_saida(
             tarifa
         )
 
+    elif movimentacao.modalidade == ModalidadeMovimentacao.MENSALISTA:
+
+        # Mensalidade cobrada separadamente.
+        # A movimentação individual não gera cobrança.
+        valor = Decimal("0.00")
+
     movimentacao.id_usuario_saida = usuario.id_usuario
     movimentacao.data_hora_saida = saida
     movimentacao.valor_total = valor
@@ -692,7 +725,7 @@ def registrar_saida(
 
         return {
             "mensagem": "Saída registrada com sucesso.",
-            "valor_total": float(valor)
+            "valor_total": float(movimentacao.valor_total)
         }
 
     except IntegrityError:
