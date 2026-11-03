@@ -11,10 +11,18 @@
 
     <title>Clientes | Estacionamento</title>
 
-    <link rel="stylesheet" href="/static/css/dashboard_admin.css">
     <link rel="stylesheet" href="/static/css/clientes.css">
 
-    <script src="/static/js/clientes.js" defer></script>
+    <!-- Gerenciamento global da autenticação -->
+    <script
+        src="{{ url_for('static', path='/js/auth.js') }}"
+        defer
+    ></script>
+    <!-- JavaScript específico do dashboard -->
+    <script
+        src="{{ url_for('static', path='/js/clientes.js') }}"
+        defer
+    ></script>
 </head>
 
 <body data-perfil="{{ perfil_atual }}">

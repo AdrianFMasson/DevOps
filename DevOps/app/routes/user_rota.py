@@ -152,16 +152,20 @@ def verificar_administrador(
 # REDIRECIONAR PARA LOGIN
 # =========================================================
 
-def redirecionar_login():
+def redirecionar_login(request: Request):
     resposta = RedirectResponse(
         url="/",
         status_code=status.HTTP_303_SEE_OTHER,
     )
 
+    # Utiliza a mesma configuração de segurança do cookie
+    # definida no momento do login.
+    cookie_seguro = request.url.scheme == "https"
+
     resposta.delete_cookie(
         key="access_token",
         path="/",
-        secure=True,
+        secure=cookie_seguro,
         httponly=True,
         samesite="lax",
     )
@@ -169,7 +173,7 @@ def redirecionar_login():
     resposta.delete_cookie(
         key="refresh_token",
         path="/",
-        secure=False,
+        secure=cookie_seguro,
         httponly=True,
         samesite="lax",
     )
@@ -192,7 +196,7 @@ def dashboard_user(
     )
 
     if autenticacao is None:
-        return redirecionar_login()
+        return redirecionar_login(request)
 
     resposta = templates.TemplateResponse(
         request=request,
@@ -221,7 +225,7 @@ def pagina_veiculos(
     )
 
     if autenticacao is None:
-        return redirecionar_login()
+        return redirecionar_login(request)
 
     resposta = templates.TemplateResponse(
         request=request,
@@ -251,7 +255,7 @@ def pagina_vagas(
     )
 
     if autenticacao is None:
-        return redirecionar_login()
+        return redirecionar_login(request)
 
     resposta = templates.TemplateResponse(
         request=request,
@@ -281,7 +285,7 @@ def pagina_clientes(
     )
 
     if autenticacao is None:
-        return redirecionar_login()
+        return redirecionar_login(request)
 
     resposta = templates.TemplateResponse(
         request=request,

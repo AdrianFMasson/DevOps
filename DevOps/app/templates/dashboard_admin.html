@@ -7,6 +7,16 @@
     <meta name="theme-color" content="#11131a">
     <title>Dashboard do Administrador | Estacionamento</title>
     <link rel="stylesheet" href="/static/css/dashboard_admin.css">
+    <!-- Gerenciamento global da autenticação -->
+    <script
+        src="{{ url_for('static', path='/js/auth.js') }}"
+        defer
+    ></script>
+    <!-- JavaScript específico do dashboard -->
+    <script
+        src="{{ url_for('static', path='/js/dashboard_admin.js') }}"
+        defer
+    ></script>
 </head>
 <body>
     <div class="pagina">

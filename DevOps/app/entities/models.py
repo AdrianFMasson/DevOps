@@ -29,8 +29,9 @@ def enum_banco(classe_enum, nome):
 
 
 class PerfilUsuario(str, Enum):
-    ADMINISTRADOR = "ADMINISTRADOR"
     OPERADOR = "OPERADOR"
+    ADMINISTRADOR = "ADMINISTRADOR"
+    
 
 
 class TipoTelefone(str, Enum):

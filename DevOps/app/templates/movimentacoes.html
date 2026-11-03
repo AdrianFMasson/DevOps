@@ -7,7 +7,16 @@
     <title>Movimentações | Estacionamento</title>
 
     <link rel="stylesheet" href="/static/css/movimentacoes.css">
-    <script src="/static/js/movimentacoes.js" defer></script>
+    <!-- Gerenciamento global da autenticação -->
+    <script
+        src="{{ url_for('static', path='/js/auth.js') }}"
+        defer
+    ></script>
+    <!-- JavaScript específico do dashboard -->
+    <script
+        src="{{ url_for('static', path='/js/movimentacoes.js') }}"
+        defer
+    ></script>
 </head>
 
 <body>

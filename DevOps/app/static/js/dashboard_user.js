@@ -1,3 +1,4 @@
+
 "use strict";
 
 document.addEventListener("DOMContentLoaded", iniciarDashboard);
@@ -5,8 +6,9 @@ document.addEventListener("DOMContentLoaded", iniciarDashboard);
 function iniciarDashboard() {
     const API_VEICULOS = "/api/veiculos";
     const API_VAGAS = "/api/vagas";
+    const API_LOGOUT = "/api/logout";
 
-    const elemento = id => document.getElementById(id);
+    const elemento = (id) => document.getElementById(id);
 
     const totalVeiculos = elemento("total-veiculos");
     const totalVagas = elemento("total-vagas");
@@ -43,9 +45,8 @@ function iniciarDashboard() {
     }
 
     async function requisicaoAPI(url) {
-        const resposta = await fetch(url, {
+        const resposta = await window.apiFetch(url, {
             method: "GET",
-            credentials: "same-origin",
             headers: {
                 "Accept": "application/json"
             }
@@ -118,10 +119,6 @@ function iniciarDashboard() {
     function vagaEstaDisponivel(vaga) {
         const status = obterStatusVaga(vaga);
 
-        /*
-         * Só considera disponível quando o status
-         * indica explicitamente que a vaga está livre.
-         */
         return [
             "disponivel",
             "livre",
@@ -133,10 +130,6 @@ function iniciarDashboard() {
     function vagaEstaOcupada(vaga) {
         const status = obterStatusVaga(vaga);
 
-        /*
-         * Só considera ocupada quando o status
-         * indica explicitamente que está ocupada.
-         */
         return [
             "ocupada",
             "em uso",
@@ -175,12 +168,6 @@ function iniciarDashboard() {
             ocupadas
         );
 
-        /*
-         * Se houver vagas com status desconhecido,
-         * os totais continuam mostrando os registros
-         * recebidos, mas os indicadores de disponibilidade
-         * e ocupação contam somente os status reconhecidos.
-         */
         const desconhecidas =
             vagas.length - disponiveis - ocupadas;
 
@@ -230,85 +217,112 @@ function iniciarDashboard() {
 
         mostrarMensagem("Consultando dados do estacionamento...");
 
-        /*
-         * As consultas são independentes.
-         * Uma falha não impede a outra de atualizar seus indicadores.
-         */
-        const resultados = await Promise.allSettled([
-            carregarVeiculos(),
-            carregarVagas()
-        ]);
+        try {
+            const resultados = await Promise.allSettled([
+                carregarVeiculos(),
+                carregarVagas()
+            ]);
 
-        const erros = [];
+            const erros = [];
 
-        if (resultados[0].status === "rejected") {
-            atualizarIndicador(totalVeiculos, null);
+            if (resultados[0].status === "rejected") {
+                atualizarIndicador(totalVeiculos, null);
 
-            console.error(
-                "Erro ao carregar veículos:",
-                resultados[0].reason
-            );
+                console.error(
+                    "Erro ao carregar veículos:",
+                    resultados[0].reason
+                );
 
-            erros.push(
-                "Não foi possível carregar os veículos."
-            );
-        }
+                erros.push(
+                    "Não foi possível carregar os veículos."
+                );
+            }
 
-        if (resultados[1].status === "rejected") {
-            atualizarIndicador(totalVagas, null);
-            atualizarIndicador(vagasDisponiveis, null);
-            atualizarIndicador(vagasOcupadas, null);
+            if (resultados[1].status === "rejected") {
+                atualizarIndicador(totalVagas, null);
+                atualizarIndicador(vagasDisponiveis, null);
+                atualizarIndicador(vagasOcupadas, null);
 
-            console.error(
-                "Erro ao carregar vagas:",
-                resultados[1].reason
-            );
+                console.error(
+                    "Erro ao carregar vagas:",
+                    resultados[1].reason
+                );
 
-            erros.push(
-                "Não foi possível carregar as vagas."
-            );
-        }
+                erros.push(
+                    "Não foi possível carregar as vagas."
+                );
+            }
 
-        if (erros.length > 0) {
+            if (erros.length > 0) {
+                mostrarMensagem(
+                    erros.join(" ") +
+                    " Verifique a conexão com o servidor e as rotas da API.",
+                    "erro"
+                );
+            } else {
+                mostrarMensagem(
+                    "Indicadores atualizados com sucesso.",
+                    "sucesso"
+                );
+
+                atualizarHorario();
+            }
+        } catch (erro) {
+            console.error("Erro ao carregar dashboard:", erro);
+
             mostrarMensagem(
-                erros.join(" ") +
-                " Verifique a conexão com o servidor e as rotas da API.",
+                "Não foi possível atualizar o dashboard.",
                 "erro"
             );
-        } else {
-            mostrarMensagem(
-                "Indicadores atualizados com sucesso.",
-                "sucesso"
-            );
-
-            atualizarHorario();
-        }
-
-        if (botaoAtualizar) {
-            botaoAtualizar.disabled = false;
-            botaoAtualizar.textContent = "↻ Atualizar dados";
+        } finally {
+            if (botaoAtualizar) {
+                botaoAtualizar.disabled = false;
+                botaoAtualizar.textContent = "↻ Atualizar dados";
+            }
         }
     }
 
     function configurarSaida() {
         if (!botaoSair) return;
 
-        botaoSair.addEventListener("click", () => {
+        botaoSair.addEventListener("click", async () => {
             const confirmado = window.confirm(
                 "Deseja sair do painel operacional?"
             );
 
             if (!confirmado) return;
 
-            /*
-             * Ajuste este destino para a tela de login
-             * real do seu projeto.
-             *
-             * Esta ação não encerra uma sessão no servidor.
-             * Quando conhecermos a rota de logout, integramos
-             * o encerramento real da sessão.
-             */
-            window.location.href = "/";
+            botaoSair.disabled = true;
+            botaoSair.textContent = "Saindo...";
+
+            try {
+                // O logout não deve tentar renovar a sessão.
+                const resposta = await fetch(API_LOGOUT, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (!resposta.ok) {
+                    throw new Error(
+                        `Não foi possível encerrar a sessão. HTTP ${resposta.status}`
+                    );
+                }
+
+                window.location.replace("/");
+            } catch (erro) {
+                console.error("Erro ao sair:", erro);
+
+                mostrarMensagem(
+                    "Não foi possível encerrar a sessão. Tente novamente.",
+                    "erro"
+                );
+
+                botaoSair.disabled = false;
+                botaoSair.textContent = "Sair do sistema";
+            }
         });
     }
 

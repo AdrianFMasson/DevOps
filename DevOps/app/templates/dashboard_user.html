@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,11 +12,19 @@
         href="{{ url_for('static', path='/css/dashboard_user.css') }}"
     >
 
+    <!-- Gerenciamento global da autenticação -->
+    <script
+        src="{{ url_for('static', path='/js/auth.js') }}"
+        defer
+    ></script>
+
+    <!-- JavaScript específico do dashboard -->
     <script
         src="{{ url_for('static', path='/js/dashboard_user.js') }}"
         defer
     ></script>
 </head>
+
 <body>
     <div class="pagina">
         <aside class="menu-lateral" id="menu-lateral">
@@ -29,26 +38,25 @@
             </div>
 
             <nav class="navegacao" aria-label="Navegação principal">
-                <a href="dashboard-user" class="item-menu ativo">
+                <a href="/dashboard-user" class="item-menu ativo">
                     <span class="icone-menu" aria-hidden="true">▦</span>
                     Dashboard
                 </a>
 
-                <a href="user/veiculos" class="item-menu">
+                <a href="/user/veiculos" class="item-menu">
                     <span class="icone-menu" aria-hidden="true">🚗</span>
                     Veículos
                 </a>
 
-                <a href="user/vagas" class="item-menu">
+                <a href="/user/vagas" class="item-menu">
                     <span class="icone-menu" aria-hidden="true">▤</span>
                     Vagas
                 </a>
 
-                <a href="user/clientes" class="item-menu">
+                <a href="/user/clientes" class="item-menu">
                     <span class="icone-menu" aria-hidden="true">♙</span>
                     Clientes
                 </a>
-
             </nav>
 
             <div class="rodape-menu">
